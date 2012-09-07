@@ -481,10 +481,8 @@ static void build_summary_buffer(sdf_file_t *h)
 
 
 
-int sdf_read_blocklist(sdf_file_t *h)
+int sdf_read_summary(sdf_file_t *h)
 {
-    int i, buflen;
-
     if (h->blocklist) {
         h->current_block = h->blocklist;
         return 0;
@@ -508,6 +506,17 @@ int sdf_read_blocklist(sdf_file_t *h)
 
     // Send the temporary buffer to all processors
     sdf_broadcast(h, h->buffer, h->summary_size);
+
+    return 0;
+}
+
+
+
+int sdf_read_blocklist(sdf_file_t *h)
+{
+    int i;
+
+    sdf_read_summary(h);
 
     // Construct the metadata blocklist using the contents of the buffer
     for (i = 0; i < h->nblocks; i++) {
@@ -755,7 +764,8 @@ int sdf_read_array_info(sdf_file_t *h)
 int sdf_read_array(sdf_file_t *h)
 {
     sdf_block_t *b = h->current_block;
-    int n;
+    char *p;
+    int n, i, count;
 
     if (b->done_data) return 0;
     if (!b->done_info) sdf_read_array_info(h);
@@ -778,7 +788,27 @@ int sdf_read_array(sdf_file_t *h)
         SDF_DPRNT("b->name: %s ", b->name);
         for (n=0; n<b->ndims; n++) SDF_DPRNT("%i ",b->local_dims[n]);
         SDF_DPRNT("\n  ");
-        SDF_DPRNTar(b->data, b->nlocal);
+        if (b->datatype_out == SDF_DATATYPE_CHARACTER) {
+            p = b->data;
+            for (n=0; n < b->local_dims[1]; n++) {
+                p = b->data + n * b->local_dims[0];
+                count = 0;
+                for (i=0; i < b->local_dims[0]; i++) {
+                    if (*p == '\0') break;
+                    if (*p != ' ') count++;
+                    p++;
+                }
+                SDF_DPRNT("c*%i[%i] ", b->local_dims[0], n);
+                p = b->data + n * b->local_dims[0];
+                for (i=0; i < count; i++) {
+                    SDF_DPRNT("%c", *p);
+                    p++;
+                }
+                SDF_DPRNT("\n  ");
+            }
+        } else {
+            SDF_DPRNTar(b->data, b->nlocal);
+        }
     }
 
     b->done_data = 1;
