@@ -1055,8 +1055,6 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 }
             }
 
-            if (b->ndims != 3) continue;
-
             for (i = 0; i < b->ndims; i++) {
                 append->next = calloc(1, sizeof(sdf_block_t));
 
