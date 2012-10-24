@@ -522,7 +522,8 @@ int sdf_read_summary(sdf_file_t *h)
 
 int sdf_read_blocklist(sdf_file_t *h)
 {
-    int i;
+    int i, fix;
+    sdf_block_t *b, *next, *mesh;
 
     sdf_read_summary(h);
 
@@ -536,6 +537,28 @@ int sdf_read_blocklist(sdf_file_t *h)
     h->buffer = NULL;
     h->current_block = h->blocklist;
 
+#ifdef PARALLEL
+    // Hack to fix cartesian blocks whose mesh sizes don't match the stagger
+    next = h->blocklist;
+    while (next) {
+        b = next;
+        next = b->next;
+        if (b->blocktype == SDF_BLOCKTYPE_PLAIN_VARIABLE && b->stagger) {
+            fix = 0;
+            mesh = sdf_find_block_by_id(h, b->mesh_id);
+            for (i = 0; i < b->ndims; i++) {
+                if (b->const_value[i] && b->dims[i] != mesh->dims[i]) {
+                    fix = 1;
+                    b->const_value[i] = 0;
+                }
+            }
+            if (fix) {
+                // Re-calculate per block parallel factorisation
+                sdf_factor(h);
+            }
+        }
+    }
+#endif
     return 0;
 }
 
