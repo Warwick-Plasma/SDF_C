@@ -1,13 +1,11 @@
 #ifndef _SDF_COMMON_H_
 #define _SDF_COMMON_H_
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #ifndef __STDC_FORMAT_MACROS
 #define __STDC_FORMAT_MACROS
 #endif
+
+#include <stdio.h>
 #include <inttypes.h>
 
 #ifdef PARALLEL
@@ -18,9 +16,17 @@
 #define SDF_DEBUG
 #endif
 
+#define SOI4  4
+#define SOI8  8
+#define SOF4  4
+#define SOF8  8
+
 #define SDF_MAXDIMS 4
 #define SDF_ID_LENGTH 32
-#define SDF_HEADER_LENGTH (11 * 4 + 2 * 8 + 8 + 12 + SDF_ID_LENGTH)
+#define SDF_HEADER_LENGTH (11 * SOI4 + 2 * SOI8 + SOF8 + 12 + SDF_ID_LENGTH)
+#define SDF_BLOCK_HEADER_LENGTH \
+    (4 + 3 * SOI4 + 3 * SOI8 + SDF_ID_LENGTH + h->string_length)
+#define SDF_SUMMARY_OFFSET (4 + 3 * SOI4 + SDF_ID_LENGTH + SOI8)
 #define SDF_ENDIANNESS 16911887
 
 #define SDF_VERSION  1
@@ -243,6 +249,7 @@ struct run_info {
 sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap);
 int sdf_close(sdf_file_t *h);
 int sdf_seek(sdf_file_t *h);
+int sdf_seek_set(sdf_file_t *h, off_t offset);
 sdf_block_t *sdf_find_block_by_id(sdf_file_t *h, const char *id);
 sdf_block_t *sdf_find_block_by_name(sdf_file_t *h, const char *name);
 int sdf_read_header(sdf_file_t *h);
