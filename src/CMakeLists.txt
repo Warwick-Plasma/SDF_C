@@ -1,0 +1,9 @@
+set(SOURCES
+   sdf_control.c sdf_derived.c sdf_extension_util.c sdf_helper.c
+   sdf_input.c sdf_input_cartesian.c sdf_input_point.c sdf_input_station.c
+   sdf_modify.c sdf_output.c sdf_util.c stack_allocator.c
+   )
+
+if(NOT TARGET sdf)
+   add_library(sdf STATIC ${SOURCES})
+endif()
