@@ -67,10 +67,18 @@ int sdf_read_plain_mesh_info(sdf_file_t *h)
     // This will be fixed up later once we have the whole block list.
     sdf_factor(h);
 
-    b->nelements = b->nelements_local = 0;
-    for (i = 0; i < b->ndims; i++) {
-        b->nelements += b->dims[i];
-        b->nelements_local += b->local_dims[i];
+    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH) {
+        b->nelements = b->nelements_local = 0;
+        for (i = 0; i < b->ndims; i++) {
+            b->nelements += b->dims[i];
+            b->nelements_local += b->local_dims[i];
+        }
+    } else {
+        b->nelements = b->nelements_local = 1;
+        for (i = 0; i < b->ndims; i++) {
+            b->nelements *= b->dims[i];
+            b->nelements_local *= b->local_dims[i];
+        }
     }
 
     return 0;
