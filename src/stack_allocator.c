@@ -28,7 +28,7 @@ void stack_alloc(sdf_block_t *b)
     if (b->done_data || b->dont_own_data) return;
     if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH ||
             b->blocktype == SDF_BLOCKTYPE_POINT_MESH) {
-        b->ngrids = b->ndims;
+        b->ngrids = 3; //b->ndims;
         sz = b->ngrids * sizeof(*b->grids);
         b->grids = calloc(1, sz);
         memory_size += sz;
