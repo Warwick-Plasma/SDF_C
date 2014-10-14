@@ -558,8 +558,6 @@ int sdf_read_plain_mesh(sdf_file_t *h)
             }
             h->current_location = h->current_location
                     + SDF_TYPE_SIZES[b->datatype] * b->dims[n];
-        } else {
-            b->grids[n] = calloc(1, SDF_TYPE_SIZES[b->datatype]);
         }
     }
 

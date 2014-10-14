@@ -32,8 +32,13 @@ void stack_alloc(sdf_block_t *b)
         sz = b->ngrids * sizeof(*b->grids);
         b->grids = calloc(1, sz);
         memory_size += sz;
-        for (i = 0; i < b->ngrids; i++) {
+        for (i = 0; i < b->ndims; i++) {
             sz = b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
+            b->grids[i] = calloc(1, sz);
+            memory_size += sz;
+        }
+        for (i = b->ndims; i < b->ngrids; i++) {
+            sz = SDF_TYPE_SIZES[b->datatype_out];
             b->grids[i] = calloc(1, sz);
             memory_size += sz;
         }
