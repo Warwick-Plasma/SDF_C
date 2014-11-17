@@ -1,4 +1,4 @@
-project(SDF C)
+project(SDFC C)
 cmake_minimum_required(VERSION 2.8.8)
 
 set(TOPLEVEL "${CMAKE_CURRENT_SOURCE_DIR}")

@@ -4,6 +4,6 @@ set(SOURCES
    sdf_modify.c sdf_output.c sdf_util.c stack_allocator.c
    )
 
-if(NOT TARGET sdf)
-   add_library(sdf STATIC ${SOURCES})
+if(NOT TARGET sdfc)
+   add_library(sdfc STATIC ${SOURCES})
 endif()
