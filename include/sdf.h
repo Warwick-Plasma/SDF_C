@@ -738,6 +738,14 @@ int sdf_block_set_array_section(sdf_block_t *b, const int ndims,
                                 const int64_t *starts, const int64_t *ends,
                                 const int64_t *strides);
 
+
+/**
+ @brief Reads time history data from a station block.
+ */
+int sdf_read_station_timehis(sdf_file_t *h, char **var_names, int nvars,
+      double t0, double t1, char **timehis, int **size, int **offset,
+      int *nrows, int *row_size);
+
 #ifdef __cplusplus
 }
 #endif

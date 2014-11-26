@@ -85,3 +85,135 @@ int sdf_read_station_info(sdf_file_t *h)
     b->ndim_units = b->nvariable_ids = b->nmaterial_names = b->nvariables;
     return 0;
 }
+
+
+
+int sdf_read_station_timehis(sdf_file_t *h, char **var_names, int nvars,
+      double t0, double t1, char **timehis, int **size, int **offset,
+      int *nrows, int *row_size)
+{
+   sdf_block_t *b = h->current_block;
+   char *data, *t_raw, *trow, *v;
+   int i, j, buff_size;
+   int start_pos, end_pos, start, end, mid;
+   double t;
+
+   if (!b->done_info) sdf_read_station_info(h);
+
+   *offset = malloc(nvars*sizeof(int));
+   *size = malloc(nvars*sizeof(int));
+   buff_size = 0;
+   *row_size = 0;
+   for (i=0; i<b->nvariables; i++) {
+      for (j=0; j<nvars; j++) {
+         size[j] = 0;
+         if ( !strcmp(b->variable_ids[i], var_names[j]) ) {
+            *offset[j] = buff_size;
+            *size[j] = SDF_TYPE_SIZES[b->variable_types[i]];
+            *row_size += SDF_TYPE_SIZES[b->variable_types[i]];
+         }
+      }
+      buff_size += SDF_TYPE_SIZES[b->variable_types[i]];
+   }
+
+   h->current_location = b->data_location;
+
+   if (h->mmap)
+      data = h->mmap + b->data_location;
+   else
+      t_raw = malloc(SDF_TYPE_SIZES[b->variable_types[i]]);
+
+   /* Find the start and end time steps
+    * Bisect until t[start] <= t0 < t[start+1]
+    */
+   start = 0;
+   end = b->nelements;
+   for ( ; start+1<end; ) {
+      /* mid = (start + end)/2 can overflow
+       * See http://googleresearch.blogspot.co.uk/2006/06/extra-extra-read-all-about-it-nearly.html
+       */
+      mid = ((unsigned int)start + (unsigned int)end) >> 1;
+      if (h->mmap)
+         t_raw = data + mid * buff_size;
+      else {
+         sdf_seek_set(h, b->data_location + mid * buff_size);
+         sdf_read_bytes(h, t_raw, SDF_TYPE_SIZES[b->variable_types[0]]);
+      }
+      switch(b->variable_types[0]) {
+         case SDF_DATATYPE_REAL4:
+            t = (double)(*(float *)t_raw);
+            break;
+         case SDF_DATATYPE_REAL8:
+            t = *((double *)t_raw);
+            break;
+      }
+      if (t<=t0)
+         start = mid;
+      else
+         end = mid;
+   }
+   start_pos = start;
+
+   start = 0;
+   end = b->nelements;
+   for ( ; start+1<end; ) {
+      /* mid = (start + end)/2 can overflow
+       * See http://googleresearch.blogspot.co.uk/2006/06/extra-extra-read-all-about-it-nearly.html
+       */
+      mid = ((unsigned int)start + (unsigned int)end) >> 1;
+      if (h->mmap)
+         t_raw = data + mid * buff_size;
+      else {
+         sdf_seek_set(h, b->data_location + mid * buff_size);
+         sdf_read_bytes(h, t_raw, SDF_TYPE_SIZES[b->variable_types[0]]);
+      }
+      switch(b->variable_types[0]) {
+         case SDF_DATATYPE_REAL4:
+            t = (double)(*(float *)t_raw);
+            break;
+         case SDF_DATATYPE_REAL8:
+            t = *((double *)t_raw);
+            break;
+      }
+      if (t<=t1)
+         start = mid;
+      else
+         end = mid;
+   }
+   end_pos = start;
+
+   *nrows = (end_pos - start_pos) / buff_size;
+   if ( *nrows<=0 ) {
+      if ( !h->mmap )
+         free(t_raw);
+      return 1;
+   }
+
+   *timehis = (char *)malloc(*nrows * *row_size);
+   if ( h->mmap )
+      data = data + start_pos * buff_size;
+   else
+      data = malloc(buff_size);
+
+   trow = *timehis;
+   for ( ; start_pos<end_pos ; start_pos += buff_size ) {
+      if ( !h->mmap ) {
+         sdf_seek_set(h, b->data_location + start_pos);
+         sdf_read_bytes(h, data, buff_size);
+      }
+      v = trow;
+      for (i=0; i<nvars; i++) {
+         memcpy(v, data + *offset[i], *size[i]);
+         v += *size[i];
+      }
+      trow += *row_size;
+   }
+
+   sdf_seek_set(h, b->data_location);
+   h->current_location = b->data_location;
+
+   if ( !h->mmap )
+      free(data);
+
+   return 0;
+}
