@@ -88,35 +88,52 @@ int sdf_read_station_info(sdf_file_t *h)
 
 
 
-int sdf_read_station_timehis(sdf_file_t *h, char **var_names, int nvars,
-      double t0, double t1, char **timehis, int **size, int **offset,
-      int *nrows, int *row_size)
+int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
+      char **var_names, int nvars, double t0, double t1, char **timehis,
+      int *size, int *offset, int *nrows, int *row_size)
 {
    sdf_block_t *b = h->current_block;
    char *data, *t_raw, *trow, *v;
-   int i, j, buff_size;
+   int i, j, s, ii, jj, ss, buff_size;
    int start_pos, end_pos, start, end, mid;
    double t;
 
    if (!b->done_info) sdf_read_station_info(h);
 
-   *offset = malloc(nvars*sizeof(int));
-   *size = malloc(nvars*sizeof(int));
-   buff_size = 0;
-   *row_size = 0;
-   for (i=0; i<b->nvariables; i++) {
-      for (j=0; j<nvars; j++) {
-         size[j] = 0;
-         if ( !strcmp(b->variable_ids[i], var_names[j]) ) {
-            *offset[j] = buff_size;
-            *size[j] = SDF_TYPE_SIZES[b->variable_types[i]];
-            *row_size += SDF_TYPE_SIZES[b->variable_types[i]];
-         }
-      }
-      buff_size += SDF_TYPE_SIZES[b->variable_types[i]];
+   /* Record 'Time' as the first variable.
+    * Sanity check first. */
+   if ( strcmp(b->variable_ids[0], "time") ) {
+      fprintf(stderr, "SFC C Library, internal error: "
+            "First variable in a station block is not 'time'.");
+      return 1;
    }
+   offset[0] = 0;
+   size[0] = SDF_TYPE_SIZES[b->variable_types[0]];
 
-   h->current_location = b->data_location;
+   buff_size = SDF_TYPE_SIZES[b->variable_types[0]];
+   *row_size = SDF_TYPE_SIZES[b->variable_types[0]];
+   ss = 0;
+   ii = 1;
+   jj = 1;
+   for (s=0; s<b->nstations; s++) {
+      for ( i=0; i<b->station_nvars[s]; i++ ) {
+         if ( s==stat[ss] ) {
+            for ( j=0; j<nvars; j++ )
+               if ( !strcmp(b->material_names[ii+i], var_names[j])
+                     || !strcmp(b->variable_ids[ii+i], var_names[j]) ) {
+                  offset[jj+j] = buff_size;
+                  size[jj+j] = SDF_TYPE_SIZES[b->variable_types[ii+i]];
+                  *row_size += SDF_TYPE_SIZES[b->variable_types[ii+i]];
+               }
+         }
+         buff_size += SDF_TYPE_SIZES[b->variable_types[ii+i]];
+      }
+      if ( s==stat[ss] ) {
+         ss++;
+         jj += nvars;
+      }
+      ii += i;
+   }
 
    if (h->mmap)
       data = h->mmap + b->data_location;
@@ -182,7 +199,7 @@ int sdf_read_station_timehis(sdf_file_t *h, char **var_names, int nvars,
    }
    end_pos = start;
 
-   *nrows = (end_pos - start_pos) / buff_size;
+   *nrows = end_pos - start_pos + 1;
    if ( *nrows<=0 ) {
       if ( !h->mmap )
          free(t_raw);
@@ -196,17 +213,19 @@ int sdf_read_station_timehis(sdf_file_t *h, char **var_names, int nvars,
       data = malloc(buff_size);
 
    trow = *timehis;
-   for ( ; start_pos<end_pos ; start_pos += buff_size ) {
+   for ( ; start_pos<=end_pos ; start_pos++ ) {
       if ( !h->mmap ) {
-         sdf_seek_set(h, b->data_location + start_pos);
+         sdf_seek_set(h, b->data_location + start_pos*buff_size);
          sdf_read_bytes(h, data, buff_size);
       }
       v = trow;
-      for (i=0; i<nvars; i++) {
-         memcpy(v, data + *offset[i], *size[i]);
-         v += *size[i];
+      for (i=0; i<nstat*nvars+1; i++) {
+         memcpy(v, data + offset[i], size[i]);
+         v += size[i];
       }
       trow += *row_size;
+      if ( h->mmap )
+         data += buff_size;
    }
 
    sdf_seek_set(h, b->data_location);
@@ -214,6 +233,13 @@ int sdf_read_station_timehis(sdf_file_t *h, char **var_names, int nvars,
 
    if ( !h->mmap )
       free(data);
+
+   /* Now redefine offset to point to the columns within timhis
+    * rather than the raw data block
+    */
+   offset[0] = 0;
+   for ( i=1; i<=nstat*nvars; i++ )
+      offset[i] = offset[i-1] + size[i-1];
 
    return 0;
 }
