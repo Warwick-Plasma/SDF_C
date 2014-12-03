@@ -95,7 +95,7 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
    sdf_block_t *b = h->current_block;
    char *data, *t_raw, *trow, *v;
    int i, j, s, ii, jj, ss, buff_size;
-   int start_pos, end_pos, start, end, mid;
+   int pos, start_pos, end_pos, start, end, mid;
    double t;
 
    if (!b->done_info) sdf_read_station_info(h);
@@ -213,17 +213,19 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
       data = malloc(buff_size);
 
    trow = *timehis;
-   for ( ; start_pos<=end_pos ; start_pos++ ) {
+   for ( pos=start_pos; pos<=end_pos ; pos++ ) {
       if ( !h->mmap ) {
-         sdf_seek_set(h, b->data_location + start_pos*buff_size);
+         sdf_seek_set(h, b->data_location + pos*buff_size);
          sdf_read_bytes(h, data, buff_size);
       }
       v = trow;
       for (i=0; i<nstat*nvars+1; i++) {
          memcpy(v, data + offset[i], size[i]);
-         v += size[i];
+         if ( i<nstat*nvars )
+            v += (end_pos - pos + 1) * size[i]
+               + (pos - start_pos) * size[i+1];
       }
-      trow += *row_size;
+      trow += size[0];
       if ( h->mmap )
          data += buff_size;
    }
