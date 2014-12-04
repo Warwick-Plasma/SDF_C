@@ -204,8 +204,8 @@ static int sdf_fopen(sdf_file_t *h, int mode)
 sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 {
     sdf_file_t *h;
-    int ret;
-    off_t curr, end;
+    int ret, fd;
+    struct stat st;
 
     // Create filehandle
     h = malloc(sizeof(*h));
@@ -267,12 +267,9 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 
 #ifndef PARALLEL
     if (h->mmap) {
-       curr = ftello(h->filehandle);
-       fseeko(h->filehandle, 0, SEEK_END);
-       end = ftello(h->filehandle);
-       fseeko(h->filehandle, curr, SEEK_SET);
-        h->mmap = mmap(NULL, (size_t)end, PROT_READ, MAP_SHARED,
-            fileno(h->filehandle), 0);
+       fd = fileno(h->filehandle);
+       fstat(fd, &st);
+       h->mmap = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
     }
 #endif
 
