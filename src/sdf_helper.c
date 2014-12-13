@@ -24,8 +24,30 @@ int sdf_helper_read_data(sdf_file_t *h, sdf_block_t *b)
         }
 
         // Allocate derived variable data if required
-        if (!b->data && !b->dont_allocate)
+        if (!b->data && !b->dont_allocate) {
+            // First fix up array dimensions. This should be moved into the
+            // metadata setup.
+            sdf_block_t *mesh = sdf_find_block_by_id(h, b->mesh_id);
+            b->ndims = mesh->ndims;
+            memcpy(b->local_dims, mesh->local_dims,
+                   b->ndims * sizeof(*b->local_dims));
+
+            if (b->blocktype == SDF_BLOCKTYPE_POINT_DERIVED) {
+                b->nelements_local = mesh->dims[0];
+            } else {
+                b->nelements_local = 1;
+                for (unsigned int i=0; i < b->ndims; i++) {
+                    if (b->stagger == SDF_STAGGER_CELL_CENTRE)
+                        b->local_dims[i]--;
+                    b->nelements_local *= b->local_dims[i];
+                }
+            }
+
+            if (!b->datatype_out)
+                b->datatype_out = mesh->datatype_out;
+
             stack_alloc(b);
+        }
 
         // Execute callback to fill in the derived variable
         if (b->populate_data) b->populate_data(h, b);
