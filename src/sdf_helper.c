@@ -36,7 +36,7 @@ int sdf_helper_read_data(sdf_file_t *h, sdf_block_t *b)
                 b->nelements_local = mesh->dims[0];
             } else {
                 b->nelements_local = 1;
-                for (unsigned int i=0; i < b->ndims; i++) {
+                for (i=0; i < b->ndims; i++) {
                     if (b->stagger == SDF_STAGGER_CELL_CENTRE)
                         b->local_dims[i]--;
                     b->nelements_local *= b->local_dims[i];
