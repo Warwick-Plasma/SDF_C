@@ -95,8 +95,8 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
 {
    sdf_block_t *b = h->current_block;
    char *data, *t_raw, *trow, *v;
-   int i, j, s, ii, jj, ss, buff_size;
-   int pos, start_pos, end_pos, start, end, mid;
+   int i, j, s, ii, jj, ss;
+   long buff_size, pos, start_pos, end_pos, start, end, mid;
    double t;
 
    if (!b->done_info) sdf_read_station_info(h);
