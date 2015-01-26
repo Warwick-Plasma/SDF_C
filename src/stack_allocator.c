@@ -58,15 +58,18 @@ static void stack_free_data_or_grid(sdf_block_t *b)
 {
     int i;
 
-    if (b->grids) {
-        for (i = 0; i < b->ngrids; i++) {
-            free(b->grids[i]);
-            memory_size -= b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
+    if (b->dont_allocate == 0) {
+        if (b->grids) {
+            for (i = 0; i < b->ngrids; i++) {
+                free(b->grids[i]);
+                memory_size -= b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
+            }
+            memory_size -= b->ngrids * sizeof(*b->grids);
+            free(b->grids);
+        } else {
+            free(b->data);
+            memory_size -= b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
         }
-        memory_size -= b->ngrids * sizeof(*b->grids);
-    } else {
-        free(b->data);
-        memory_size -= b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
     }
     b->grids = NULL;
     b->data = NULL;
