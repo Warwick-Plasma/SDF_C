@@ -93,6 +93,13 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
       char **var_names, int nvars, double t0, double t1, char **timehis,
       int *size, int *offset, int *nrows, int *row_size)
 {
+   /* Read station time histories for specified stations and variables
+    * from a single station block.
+    * Unknown variables are ignored.
+    * The list of specified stations must be in ascending numerical
+    * order and all valid
+    */
+
    sdf_block_t *b = h->current_block;
    char *data, *t_raw, *trow, *v;
    int i, j, s, ii, jj, ss;
@@ -104,10 +111,26 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
    /* Record 'Time' as the first variable.
     * Sanity check first. */
    if ( strcmp(b->variable_ids[0], "time") ) {
-      fprintf(stderr, "SFC C Library, internal error: "
-            "First variable in a station block is not 'time'.");
+      fprintf(stderr, "SDF C Library, internal error: "
+            "First variable in a station block is not 'time'.\n");
       return 1;
    }
+   /* Check validity of station numbers */
+   for ( i=0; i<nstat; i++ ) {
+      if ( stat[i]<0 || stat[i]>=b->nstations ) {
+         fprintf(stderr, "SDF C Library, function sdf_read_station_timehis, "
+               "internal error: Requested station number lies "
+               "outside valid range.\n");
+         return 1;
+      }
+      if ( i>0 && stat[i-1]>=stat[i] ) {
+         fprintf(stderr, "SDF C Library, function sdf_read_station_timehis, "
+               "internal error: Requested list of stations is not "
+               "a strictly increasing list.\n");
+         return 1;
+      }
+   }
+
    offset[0] = 0;
    size[0] = SDF_TYPE_SIZES[b->variable_types[0]];
 
