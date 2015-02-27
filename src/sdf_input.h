@@ -223,7 +223,7 @@ extern "C" {
 #endif
 
 void sdf_trim(char *str);
-int sdf_read_bytes(sdf_file_t *h, char *buf, int buflen);
+int sdf_read_bytes(sdf_file_t *h, char *buf, size_t buflen);
 
 #ifdef __cplusplus
 }

@@ -208,7 +208,8 @@ static int sdf_helper_read_array_halo(sdf_file_t *h, void **var_in)
     char **var_ptr = (char**)var_in;
     char *read_var = *var_ptr;
     char convert;
-    int count, sz;
+    int sz;
+    size_t count;
 #ifdef PARALLEL
     MPI_Datatype distribution, facetype;
     int sizes[SDF_MAXDIMS], subsizes[SDF_MAXDIMS];
@@ -350,10 +351,10 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     char *read_ptr = *var_ptr, *read_var = *var_ptr;
     char convert;
     int i, sz;
-    int64_t count;
+    size_t count, length;
 #ifndef PARALLEL
     int64_t *offset_starts = NULL, *offset_ends = NULL;
-    int64_t length, ncount, offset, nreads;
+    int64_t ncount, offset, nreads;
     int *loop_counts = NULL, *idx = NULL;
     int n, ndims, combined_reads = 0;
 #endif
@@ -378,18 +379,20 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
             count = b->local_dims[dim];
     }
 
+    sz = SDF_TYPE_SIZES[b->datatype];
+    length = sz * count;
+
     if (h->mmap) {
         *var_ptr = h->mmap + h->current_location;
-        return (count * SDF_TYPE_SIZES[b->datatype_out]);
+        return length;
     }
 
-    sz = SDF_TYPE_SIZES[b->datatype];
     if (h->use_float && b->datatype == SDF_DATATYPE_REAL8) {
         convert = 1;
-        read_ptr = read_var = malloc(count * sz);
+        read_ptr = read_var = malloc(length);
     } else {
         convert = 0;
-        if (!read_var) *var_ptr = read_ptr = read_var = malloc(count * sz);
+        if (!read_var) *var_ptr = read_ptr = read_var = malloc(length);
     }
 
 #ifdef PARALLEL
@@ -400,10 +403,8 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     MPI_File_set_view(h->filehandle, 0, MPI_BYTE, MPI_BYTE, "native",
             MPI_INFO_NULL);
 #else
-    sz = SDF_TYPE_SIZES[b->datatype];
     nreads = 1;
     ndims = 0;
-    length = sz * count;
 
     if (b->array_starts && dim < 0) {
         // First check for any reads which can be combined

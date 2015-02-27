@@ -98,10 +98,10 @@ static inline int sdf_get_next_block(sdf_file_t *h)
 
 
 
-int sdf_read_bytes(sdf_file_t *h, char *buf, int buflen)
+int sdf_read_bytes(sdf_file_t *h, char *buf, size_t buflen)
 {
 #ifdef PARALLEL
-    return MPI_File_read(h->filehandle, buf, buflen, MPI_BYTE,
+    return MPI_File_read(h->filehandle, buf, (int)buflen, MPI_BYTE,
             MPI_STATUS_IGNORE);
 #else
     return (1 != fread(buf, buflen, 1, h->filehandle));
@@ -115,7 +115,7 @@ int sdf_read_bytes(sdf_file_t *h, char *buf, int buflen)
  */
 int sdf_read_header(sdf_file_t *h)
 {
-    int buflen;
+    size_t buflen;
 
     h->indent = 0;
 

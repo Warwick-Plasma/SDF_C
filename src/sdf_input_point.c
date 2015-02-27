@@ -140,18 +140,22 @@ static int sdf_free_distribution(sdf_file_t *h)
 
 
 
-static int sdf_helper_read_array(sdf_file_t *h, void **var_in, int count)
+static int sdf_helper_read_array(sdf_file_t *h, void **var_in, size_t count)
 {
     sdf_block_t *b = h->current_block;
     char **var = (char **)var_in;
+    size_t sz, length;
 
     if (h->mmap) {
         *var = h->mmap + h->current_location;
         return 0;
     }
 
+    sz = SDF_TYPE_SIZES[b->datatype];
+    length = count * sz;
+
     if (*var) free(*var);
-    *var = malloc(count * SDF_TYPE_SIZES[b->datatype]);
+    *var = malloc(length);
 #ifdef PARALLEL
     MPI_File_set_view(h->filehandle, h->current_location, b->mpitype,
             b->distribution, "native", MPI_INFO_NULL);
@@ -161,7 +165,7 @@ static int sdf_helper_read_array(sdf_file_t *h, void **var_in, int count)
             MPI_INFO_NULL);
 #else
     fseeko(h->filehandle, h->current_location, SEEK_SET);
-    if (!fread(*var, SDF_TYPE_SIZES[b->datatype], count, h->filehandle))
+    if (!fread(*var, sz, count, h->filehandle))
         return 1;
 #endif
 
