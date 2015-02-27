@@ -205,8 +205,7 @@ static int sdf_fopen(sdf_file_t *h, int mode)
 sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 {
     sdf_file_t *h;
-    int ret, fd;
-    struct stat st;
+    int ret;
 
     // Create filehandle
     h = malloc(sizeof(*h));
@@ -268,9 +267,7 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 
 #ifndef PARALLEL
     if (h->mmap) {
-       fd = fileno(h->filehandle);
-       fstat(fd, &st);
-       h->mmap = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+       h->fd = fileno(h->filehandle);
     }
 #endif
 
@@ -335,6 +332,13 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
         }
         free(b->data);
     }
+#ifndef PARALLEL
+    if (b->mmap) {
+        munmap(b->mmap, b->mmap_len);
+        b->mmap = NULL;
+        b->mmap_len = 0;
+    }
+#endif
     if (b->node_list) free(b->node_list);
     if (b->boundary_cells) free(b->boundary_cells);
     b->node_list = NULL;

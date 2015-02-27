@@ -5,6 +5,10 @@
 #include "sdf_input.h"
 #include "sdf_input_point.h"
 #include "sdf_control.h"
+#ifndef PARALLEL
+#include <unistd.h>
+#include <sys/mman.h>
+#endif
 
 //#define SDF_COMMON_MESH_LENGTH (4 + 8 + h->id_length + 4 * b->ndims)
 
@@ -145,14 +149,24 @@ static int sdf_helper_read_array(sdf_file_t *h, void **var_in, size_t count)
     sdf_block_t *b = h->current_block;
     char **var = (char **)var_in;
     size_t sz, length;
-
-    if (h->mmap) {
-        *var = h->mmap + h->current_location;
-        return 0;
-    }
+#ifndef PARALLEL
+    size_t mlen, mstart, moff;
+#endif
 
     sz = SDF_TYPE_SIZES[b->datatype];
     length = count * sz;
+
+#ifndef PARALLEL
+    if (h->mmap) {
+        mlen = getpagesize();
+        mstart = mlen * (h->current_location / mlen);
+        moff = h->current_location - mstart;
+        b->mmap_len = mlen = length + moff;
+        b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
+        *var = moff + b->mmap;
+        return 0;
+    }
+#endif
 
     if (*var) free(*var);
     *var = malloc(length);

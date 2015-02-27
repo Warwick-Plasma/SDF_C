@@ -20,7 +20,7 @@
 
 #define SDF_VERSION  1
 #define SDF_REVISION 2
-#define SDF_LIB_VERSION  7
+#define SDF_LIB_VERSION  8
 #define SDF_LIB_REVISION 0
 
 #define SDF_MAGIC "SDF1"
@@ -309,7 +309,8 @@ struct sdf_block {
     int nstation_ids, nvariable_ids;
     int nstation_names, nmaterial_names;
     int option;
-    char *mimetype, *checksum_type, *checksum;
+    char *mimetype, *checksum_type, *checksum, *mmap;
+    int64_t mmap_len;
 #ifdef PARALLEL
     MPI_Datatype mpitype, distribution, mpitype_out;
 #endif
@@ -342,7 +343,7 @@ struct sdf_file {
     sdf_block_t *blocklist, *tail, *current_block, *last_block_in_file;
     char *mmap;
     void *ext_data;
-    int array_count;
+    int array_count, fd;
 #ifdef PARALLEL
     MPI_File filehandle;
 #else

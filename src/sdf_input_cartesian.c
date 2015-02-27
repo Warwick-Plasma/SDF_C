@@ -5,6 +5,10 @@
 #include "sdf_input.h"
 #include "sdf_input_cartesian.h"
 #include "sdf_control.h"
+#ifndef PARALLEL
+#include <unistd.h>
+#include <sys/mman.h>
+#endif
 
 //#define SDF_COMMON_MESH_LENGTH (4 + 8 + h->id_length + 4 * b->ndims)
 
@@ -353,6 +357,7 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     int i, sz;
     size_t count, length;
 #ifndef PARALLEL
+    size_t mlen, mstart, moff;
     int64_t *offset_starts = NULL, *offset_ends = NULL;
     int64_t ncount, offset, nreads;
     int *loop_counts = NULL, *idx = NULL;
@@ -382,10 +387,17 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     sz = SDF_TYPE_SIZES[b->datatype];
     length = sz * count;
 
+#ifndef PARALLEL
     if (h->mmap) {
-        *var_ptr = h->mmap + h->current_location;
+        mlen = getpagesize();
+        mstart = mlen * (h->current_location / mlen);
+        moff = h->current_location - mstart;
+        b->mmap_len = mlen = length + moff;
+        b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
+        *var_ptr = moff + b->mmap;
         return length;
     }
+#endif
 
     if (h->use_float && b->datatype == SDF_DATATYPE_REAL8) {
         convert = 1;

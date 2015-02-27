@@ -9,6 +9,9 @@
 #include "sdf_control.h"
 #ifdef PARALLEL
 #include <mpi.h>
+#else
+#include <unistd.h>
+#include <sys/mman.h>
 #endif
 
 /**
@@ -975,22 +978,35 @@ static int sdf_read_array(sdf_file_t *h)
 {
     sdf_block_t *b = h->current_block;
     char *p;
-    int n, i, count;
+    int i, n, count;
+    size_t length;
+#ifndef PARALLEL
+    size_t mlen, mstart, moff;
+#endif
 
     if (b->done_data) return 0;
     if (!b->done_info) sdf_read_array_info(h);
 
     h->current_location = b->data_location;
 
-    n = SDF_TYPE_SIZES[b->datatype] * b->nelements_local;
+    length = SDF_TYPE_SIZES[b->datatype] * b->nelements_local;
+
+#ifndef PARALLEL
     if (h->mmap) {
-        b->data = h->mmap + h->current_location;
-    } else {
+        mlen = getpagesize();
+        mstart = mlen * (h->current_location / mlen);
+        moff = h->current_location - mstart;
+        b->mmap_len = mlen = b->data_length + moff;
+        b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
+        b->data = moff + b->mmap;
+    } else
+#endif
+    {
         if (b->data) free(b->data);
-        b->data = malloc(n);
+        b->data = malloc(length);
         sdf_seek(h);
-        sdf_read_bytes(h, b->data, n);
-        if (h->swap) sdf_convert_array_to_float(h, &b->data, n);
+        sdf_read_bytes(h, b->data, length);
+        if (h->swap) sdf_convert_array_to_float(h, &b->data, length);
     }
 
     if (h->print) {
@@ -1032,15 +1048,26 @@ static int sdf_read_array(sdf_file_t *h)
 static int sdf_read_datablock(sdf_file_t *h)
 {
     sdf_block_t *b = h->current_block;
+#ifndef PARALLEL
+    size_t mlen, mstart, moff;
+#endif
 
     if (b->done_data) return 0;
     if (!b->done_info) sdf_read_datablock_info(h);
 
     h->current_location = b->data_location;
 
+#ifndef PARALLEL
     if (h->mmap) {
-        b->data = h->mmap + h->current_location;
-    } else {
+        mlen = getpagesize();
+        mstart = mlen * (h->current_location / mlen);
+        moff = h->current_location - mstart;
+        b->mmap_len = mlen = b->data_length + moff;
+        b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
+        b->data = moff + b->mmap;
+    } else
+#endif
+    {
         if (b->data) free(b->data);
         b->data = malloc(b->data_length);
         sdf_seek(h);

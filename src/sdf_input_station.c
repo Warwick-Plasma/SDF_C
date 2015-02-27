@@ -5,6 +5,10 @@
 #include "sdf_input.h"
 #include "sdf_input_station.h"
 #include "sdf_control.h"
+#ifndef PARALLEL
+#include <unistd.h>
+#include <sys/mman.h>
+#endif
 
 //#define SDF_COMMON_MESH_LENGTH (4 + 8 + h->id_length + 4 * b->ndims)
 
@@ -105,6 +109,9 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
    int i, j, s, ii, jj, ss;
    long buff_size, pos, start_pos, end_pos, start, end, mid;
    double t;
+#ifndef PARALLEL
+   size_t mlen, mstart, moff;
+#endif
 
    if (!b->done_info) sdf_read_station_info(h);
 
@@ -159,9 +166,16 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
       ii += i;
    }
 
-   if (h->mmap)
-      data = h->mmap + b->data_location;
-   else
+#ifndef PARALLEL
+   if (h->mmap) {
+      mlen = getpagesize();
+      mstart = mlen * (b->data_location / mlen);
+      moff = b->data_location - mstart;
+      b->mmap_len = mlen = b->data_length + moff;
+      b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
+      b->data = moff + b->mmap;
+   } else
+#endif
       t_raw = malloc(SDF_TYPE_SIZES[b->variable_types[i]]);
 
    /* Find the start and end time steps
