@@ -389,7 +389,7 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
 
 #ifndef PARALLEL
     if (h->mmap) {
-        mlen = getpagesize();
+        mlen = sysconf(_SC_PAGESIZE);
         mstart = mlen * (h->current_location / mlen);
         moff = h->current_location - mstart;
         b->mmap_len = mlen = length + moff;

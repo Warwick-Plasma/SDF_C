@@ -168,12 +168,12 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
 
 #ifndef PARALLEL
    if (h->mmap) {
-      mlen = getpagesize();
+      mlen = sysconf(_SC_PAGESIZE);
       mstart = mlen * (b->data_location / mlen);
       moff = b->data_location - mstart;
       b->mmap_len = mlen = b->data_length + moff;
       b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
-      b->data = moff + b->mmap;
+      data = moff + b->mmap;
    } else
 #endif
       t_raw = malloc(SDF_TYPE_SIZES[b->variable_types[i]]);

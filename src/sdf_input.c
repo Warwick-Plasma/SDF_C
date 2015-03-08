@@ -993,7 +993,7 @@ static int sdf_read_array(sdf_file_t *h)
 
 #ifndef PARALLEL
     if (h->mmap) {
-        mlen = getpagesize();
+        mlen = sysconf(_SC_PAGESIZE);
         mstart = mlen * (h->current_location / mlen);
         moff = h->current_location - mstart;
         b->mmap_len = mlen = b->data_length + moff;
@@ -1059,7 +1059,7 @@ static int sdf_read_datablock(sdf_file_t *h)
 
 #ifndef PARALLEL
     if (h->mmap) {
-        mlen = getpagesize();
+        mlen = sysconf(_SC_PAGESIZE);
         mstart = mlen * (h->current_location / mlen);
         moff = h->current_location - mstart;
         b->mmap_len = mlen = b->data_length + moff;
