@@ -752,7 +752,7 @@ static sdf_block_t *sdf_callback_current_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
     }
     sz = SDF_TYPE_SIZES[b->datatype_out];
 
-    b->nelements_local = 1;
+    b->nelements_local = 0;
     for (n = 0; n < b->ndims; n++) {
 #ifdef PARALLEL
         nx = mesh->cpu_split[n];
@@ -767,7 +767,7 @@ static sdf_block_t *sdf_callback_current_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
         x = calloc(nx, sz);
         memcpy(x+sz*i0, mesh->grids[n], sz);
         if (pmax < 0) memcpy(x+sz*(i0+1), (char*)mesh->grids[n]+sz*idx, sz);
-        b->nelements_local *= nx;
+        b->nelements_local += nx;
 #ifdef PARALLEL
         buf = malloc(nx*sz);
         MPI_Reduce(x, buf, nx*sz, MPI_BYTE, MPI_BOR, 0, h->comm);
@@ -1650,6 +1650,11 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                 first_mesh->dim_labels[n]);
             SDF_SET_ENTRY_STRING(append->dim_units[n],
                 first_mesh->dim_units[n]);
+#ifdef PARALLEL
+            append->dims[n] = append->local_dims[n] = first_mesh->cpu_split[n];
+#else
+            append->dims[n] = append->local_dims[n] = 2;
+#endif
         }
         mesh = append;
 
