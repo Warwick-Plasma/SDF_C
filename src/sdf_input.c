@@ -525,7 +525,7 @@ static void build_summary_buffer(sdf_file_t *h)
 
             memcpy(&next_block_location, blockbuf->buffer,
                    sizeof(next_block_location));
-            memcpy(&data_location, (char*)blockbuf->buffer+8,
+            memcpy(&data_location, (char*)blockbuf->buffer + SOI8,
                    sizeof(data_location));
 
             if (h->swap) {
@@ -537,8 +537,9 @@ static void build_summary_buffer(sdf_file_t *h)
             // info length in the header.
             if (h->file_version + h->file_revision > 1) {
                 memcpy(&info_length,
-                      (char*)blockbuf->buffer+68+h->string_length,
-                       sizeof(info_length));
+                        (char*)blockbuf->buffer + 3 * (SOI4 + SOI8)
+                        + h->string_length + h->id_length,
+                        sizeof(info_length));
                 if (h->swap) _SDF_BYTE_SWAP32(info_length);
             } else {
                 if (data_location > block_location)
