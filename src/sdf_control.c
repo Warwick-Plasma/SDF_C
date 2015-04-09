@@ -321,16 +321,25 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
         if (!h->mmap && b->done_data && !b->dont_own_data)
             for (i = 0; i < b->ngrids; i++) if (b->grids[i]) free(b->grids[i]);
         free(b->grids);
+        b->grids = NULL;
     }
-    if (!h->mmap && b->data && b->done_data && !b->dont_own_data) {
+    if (b->data && b->done_data && !b->dont_own_data) {
         if (b->blocktype == SDF_BLOCKTYPE_RUN_INFO) {
             run = b->data;
             if (run->commit_id)       free(run->commit_id);
             if (run->sha1sum)         free(run->sha1sum);
             if (run->compile_machine) free(run->compile_machine);
             if (run->compile_flags)   free(run->compile_flags);
+            free(b->data);
+            b->data = NULL;
+        } else if (b->blocktype == SDF_BLOCKTYPE_NAMEVALUE) {
+            free(b->data);
+            b->data = NULL;
         }
-        free(b->data);
+        if (!h->mmap && b->data) {
+            free(b->data);
+            b->data = NULL;
+        }
     }
 #ifndef PARALLEL
     if (b->mmap) {

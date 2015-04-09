@@ -968,6 +968,8 @@ static int sdf_read_namevalue(sdf_file_t *h)
         b->data = string;
         break;
     }
+    b->nmaterial_names = b->ndims;
+    b->done_data = 1;
 
     return 0;
 }
