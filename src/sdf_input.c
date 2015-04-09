@@ -536,7 +536,8 @@ static void build_summary_buffer(sdf_file_t *h)
             // Older versions of the file did not contain the block
             // info length in the header.
             if (h->file_version + h->file_revision > 1) {
-                memcpy(&info_length, (char*)blockbuf->buffer+132,
+                memcpy(&info_length,
+                      (char*)blockbuf->buffer+68+h->string_length,
                        sizeof(info_length));
                 if (h->swap) _SDF_BYTE_SWAP32(info_length);
             } else {
