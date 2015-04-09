@@ -152,6 +152,16 @@ void stack_free(void)
 }
 
 
+void stack_destroy(void)
+{
+    stack_free();
+    if (stack_head) {
+        free(stack_head);
+        stack_head = stack_tail = NULL;
+    }
+}
+
+
 void stack_init(void)
 {
     if (!stack_head) stack_head =

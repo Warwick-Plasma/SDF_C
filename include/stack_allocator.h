@@ -21,6 +21,7 @@ void stack_free_block(sdf_block_t *b);
 void stack_push_to_bottom(sdf_block_t *b);
 void stack_freeup_memory(void);
 void stack_free(void);
+void stack_destroy(void);
 void stack_init(void);
 
 #ifdef __cplusplus
