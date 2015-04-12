@@ -27,7 +27,11 @@ int sdf_helper_read_data(sdf_file_t *h, sdf_block_t *b)
         if (!b->data && !b->dont_allocate) {
             // First fix up array dimensions. This should be moved into the
             // metadata setup.
-            sdf_block_t *mesh = sdf_find_block_by_id(h, b->mesh_id);
+            sdf_block_t *mesh;
+            if (b->mesh_id)
+                mesh = sdf_find_block_by_id(h, b->mesh_id);
+            else
+                mesh = b->subblock;
             b->ndims = mesh->ndims;
             memcpy(b->local_dims, mesh->local_dims,
                    b->ndims * sizeof(*b->local_dims));
