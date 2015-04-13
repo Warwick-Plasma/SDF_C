@@ -1029,6 +1029,7 @@ static void add_surface_variables(sdf_file_t *h, sdf_block_t *surf,
         append->name = str;
 
         append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
+        append->derived = 1;
         append->datatype = b->datatype;
         append->datatype_out = b->datatype_out;
         append->ndims = b->ndims;
@@ -1106,7 +1107,8 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
     SDF_SET_ENTRY_ID(mesh->id, meshid);
     SDF_SET_ENTRY_ID(mesh->units, "s");
     SDF_SET_ENTRY_STRING(mesh->name, meshname);
-    mesh->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
+    mesh->blocktype = SDF_BLOCKTYPE_PLAIN_MESH;
+    mesh->derived = 1;
     mesh->ndim_units = mesh->ndim_labels = mesh->ndims = 1;
     mesh->dim_units = calloc(mesh->ndims, sizeof(char*));
     mesh->dim_labels = calloc(mesh->ndims, sizeof(char*));
@@ -1130,7 +1132,8 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
         mesh->id = strcat_alloc(meshid, b->id);
         mesh->name = strcat_alloc(meshname, b->name);
         SDF_SET_ENTRY_ID(mesh->units, "s");
-        mesh->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
+        mesh->blocktype = SDF_BLOCKTYPE_PLAIN_MESH;
+        mesh->derived = 1;
         mesh->ndim_units = mesh->ndim_labels = mesh->ndims = 1;
         mesh->dim_units = calloc(mesh->ndims, sizeof(char*));
         mesh->dim_labels = calloc(mesh->ndims, sizeof(char*));
@@ -1178,6 +1181,7 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
             b->name = strcat_alloc(station->station_names[i],
                     station->material_names[var]);
             b->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
+            b->derived = 1;
             SDF_SET_ENTRY_ID(b->units, station->dim_units[var]);
             SDF_SET_ENTRY_ID(b->station_id, station->station_ids[i]);
             b->ndims = 1;
@@ -1240,6 +1244,7 @@ static void add_global_station(sdf_file_t *h, sdf_block_t **append,
     new = *append;
 
     new->blocktype = SDF_BLOCKTYPE_STATION_DERIVED;
+    new->derived = 1;
     SDF_SET_ENTRY_ID(new->id, "global_stations");
     SDF_SET_ENTRY_STRING(new->name, "Global Stations");
 
@@ -1492,12 +1497,14 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                     append->id = str;
 
                     append->blocktype = SDF_BLOCKTYPE_POINT_DERIVED;
+                    append->derived = 1;
                     name2 = b->dim_labels[i];
                 } else {
                     append->id = NULL;
                     SDF_SET_ENTRY_ID(append->id, grid_ids[i]);
 
                     append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
+                    append->derived = 1;
                     name2 = grid_ids[i];
                     append->dont_display = 1;
                 }
@@ -1601,6 +1608,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             b->name = str;
 
             append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
+            append->derived = 1;
 
             SDF_SET_ENTRY_ID(append->mesh_id, mesh->id);
             SDF_SET_ENTRY_ID(append->units, "CPU");
@@ -1667,6 +1675,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
         SDF_SET_ENTRY_ID(append->name, "CPUs/Current rank");
 
         append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
+        append->derived = 1;
 
         SDF_SET_ENTRY_ID(append->units, "CPU");
         SDF_SET_ENTRY_ID(append->mesh_id, mesh->id);

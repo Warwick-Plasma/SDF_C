@@ -20,7 +20,7 @@
 
 #define SDF_VERSION  1
 #define SDF_REVISION 2
-#define SDF_LIB_VERSION  8
+#define SDF_LIB_VERSION  9
 #define SDF_LIB_REVISION 0
 
 #define SDF_MAGIC "SDF1"
@@ -311,6 +311,7 @@ struct sdf_block {
     int option;
     char *mimetype, *checksum_type, *checksum, *mmap;
     int64_t mmap_len;
+    char derived;
 #ifdef PARALLEL
     MPI_Datatype mpitype, distribution, mpitype_out;
 #endif
