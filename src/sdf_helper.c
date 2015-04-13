@@ -50,14 +50,14 @@ int sdf_helper_read_data(sdf_file_t *h, sdf_block_t *b)
             if (!b->datatype_out)
                 b->datatype_out = mesh->datatype_out;
 
-            stack_alloc(b);
+            sdf_stack_alloc(h, b);
         }
 
         // Execute callback to fill in the derived variable
         if (b->populate_data) b->populate_data(h, b);
     }
 
-    stack_alloc(b);
+    sdf_stack_alloc(h, b);
 
     h->current_block = b;
     return sdf_read_data(h);

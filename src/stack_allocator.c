@@ -13,48 +13,51 @@ struct stack {
     struct stack *next;
 };
 
-static struct stack *stack_head = NULL;
-static struct stack *stack_tail = NULL;
+struct stack_handle {
+    struct stack *head, *tail;
+    int64_t memory_size;
+};
 
 #define MAX_MEMORY 2147483648 // 2GB
-static int64_t memory_size = 0;
 
 
-void stack_alloc(sdf_block_t *b)
+void stack_alloc(stack_handle_t *sh, sdf_block_t *b)
 {
     int i;
     uint64_t sz;
     struct stack *tail;
+
     if (b->done_data || b->dont_own_data) return;
+
     if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH ||
             b->blocktype == SDF_BLOCKTYPE_POINT_MESH) {
         b->ngrids = 3; //b->ndims;
         sz = b->ngrids * sizeof(*b->grids);
         b->grids = calloc(1, sz);
-        memory_size += sz;
+        sh->memory_size += sz;
         for (i = 0; i < b->ndims; i++) {
             sz = b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
             b->grids[i] = calloc(1, sz);
-            memory_size += sz;
+            sh->memory_size += sz;
         }
         for (i = b->ndims; i < b->ngrids; i++) {
             sz = SDF_TYPE_SIZES[b->datatype_out];
             b->grids[i] = calloc(1, sz);
-            memory_size += sz;
+            sh->memory_size += sz;
         }
     } else {
         sz = b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
         b->data = calloc(1, sz);
-        memory_size += sz;
+        sh->memory_size += sz;
     }
-    stack_tail->next = tail = (struct stack*)malloc(sizeof(struct stack));
+    sh->tail->next = tail = (struct stack*)malloc(sizeof(struct stack));
     tail->block = b;
     tail->next = NULL;
-    stack_tail = tail;
+    sh->tail = tail;
 }
 
 
-static void stack_free_data_or_grid(sdf_block_t *b)
+static void stack_free_data_or_grid(stack_handle_t *sh, sdf_block_t *b)
 {
     int i;
 
@@ -62,14 +65,15 @@ static void stack_free_data_or_grid(sdf_block_t *b)
         if (b->grids) {
             for (i = 0; i < b->ngrids; i++) {
                 free(b->grids[i]);
-                memory_size -=
+                sh->memory_size -=
                     b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
             }
-            memory_size -= b->ngrids * sizeof(*b->grids);
+            sh->memory_size -= b->ngrids * sizeof(*b->grids);
             free(b->grids);
         } else {
             free(b->data);
-            memory_size -= b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
+            sh->memory_size -=
+                b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
         }
     }
     b->grids = NULL;
@@ -78,16 +82,16 @@ static void stack_free_data_or_grid(sdf_block_t *b)
 }
 
 
-void stack_free_block(sdf_block_t *b)
+void stack_free_block(stack_handle_t *sh, sdf_block_t *b)
 {
-    struct stack *old_stack_entry = stack_head;
-    struct stack *stack_entry = stack_head;
+    struct stack *old_stack_entry = sh->head;
+    struct stack *stack_entry = sh->head;
 
     while (stack_entry) {
         if (stack_entry->block == b) {
-            stack_free_data_or_grid(b);
+            stack_free_data_or_grid(sh, b);
             old_stack_entry->next = stack_entry->next;
-            if (stack_entry == stack_tail) stack_tail = old_stack_entry;
+            if (stack_entry == sh->tail) sh->tail = old_stack_entry;
             free(stack_entry);
             return;
         }
@@ -97,17 +101,17 @@ void stack_free_block(sdf_block_t *b)
 }
 
 
-void stack_push_to_bottom(sdf_block_t *b)
+void stack_push_to_bottom(stack_handle_t *sh, sdf_block_t *b)
 {
-    struct stack *old_stack_entry = stack_head;
-    struct stack *stack_entry = stack_head;
+    struct stack *old_stack_entry = sh->head;
+    struct stack *stack_entry = sh->head;
 
     while (stack_entry) {
         if (stack_entry->block == b) {
             old_stack_entry->next = stack_entry->next;
-            stack_tail->next = stack_entry;
-            stack_tail = stack_entry;
-            stack_tail->next = NULL;
+            sh->tail->next = stack_entry;
+            sh->tail = stack_entry;
+            sh->tail->next = NULL;
             return;
         }
         old_stack_entry = stack_entry;
@@ -116,54 +120,108 @@ void stack_push_to_bottom(sdf_block_t *b)
 }
 
 
-void stack_freeup_memory(void)
+void stack_freeup_memory(stack_handle_t *sh)
 {
     sdf_block_t *b;
     struct stack *head;
 
-    if (memory_size < MAX_MEMORY) return;
+    if (sh->memory_size < MAX_MEMORY) return;
 
-    while (stack_head->next) {
-        head = stack_head;
-        stack_head = stack_head->next;
+    while (sh->head->next) {
+        head = sh->head;
+        sh->head = sh->head->next;
         free(head);
-        b = stack_head->block;
-        stack_head->block = NULL;
-        stack_free_data_or_grid(b);
-        if (memory_size < MAX_MEMORY) break;
+        b = sh->head->block;
+        sh->head->block = NULL;
+        stack_free_data_or_grid(sh, b);
+        if (sh->memory_size < MAX_MEMORY) break;
     }
 }
 
 
-void stack_free(void)
+void stack_free(stack_handle_t *sh)
 {
     sdf_block_t *b;
     struct stack *head;
 
-    while (stack_head->next) {
-        head = stack_head;
-        stack_head = stack_head->next;
+    while (sh->head->next) {
+        head = sh->head;
+        sh->head = sh->head->next;
         free(head);
-        b = stack_head->block;
-        stack_head->block = NULL;
-        stack_free_data_or_grid(b);
+        b = sh->head->block;
+        sh->head->block = NULL;
+        stack_free_data_or_grid(sh, b);
     }
-    memory_size = 0;
+    sh->memory_size = 0;
 }
 
 
-void stack_destroy(void)
+void stack_destroy(stack_handle_t *sh)
 {
-    stack_free();
-    if (stack_head) {
-        free(stack_head);
-        stack_head = stack_tail = NULL;
+    stack_free(sh);
+    if (sh->head) {
+        free(sh->head);
+        sh->head = sh->tail = NULL;
     }
+    free(sh);
 }
 
 
-void stack_init(void)
+stack_handle_t *stack_init(void)
 {
-    if (!stack_head) stack_head =
-        stack_tail = (struct stack*)calloc(1, sizeof(struct stack));
+    stack_handle_t *sh = (stack_handle_t*)calloc(1, sizeof(*sh));
+    sh->head = sh->tail = (struct stack*)calloc(1, sizeof(struct stack));
+    return sh;
+}
+
+
+void sdf_stack_alloc(sdf_file_t *h, sdf_block_t *b)
+{
+    stack_alloc(h->stack_handle, b);
+}
+
+
+void sdf_stack_free_block(sdf_file_t *h, sdf_block_t *b)
+{
+    stack_free_block(h->stack_handle, b);
+}
+
+
+void sdf_stack_push_to_bottom(sdf_file_t *h, sdf_block_t *b)
+{
+    stack_push_to_bottom(h->stack_handle, b);
+}
+
+
+void sdf_stack_freeup_memory(sdf_file_t *h)
+{
+    stack_freeup_memory(h->stack_handle);
+}
+
+
+void sdf_stack_free(sdf_file_t *h)
+{
+    stack_free(h->stack_handle);
+}
+
+
+void sdf_stack_destroy(sdf_file_t *h)
+{
+    stack_destroy(h->stack_handle);
+}
+
+
+void sdf_stack_init(sdf_file_t *h)
+{
+    if (!h) {
+        fprintf(stderr, "Error in sdf_stack_init: invalid file handle\n");
+        return;
+    }
+
+    if (h->stack_handle) {
+        fprintf(stderr, "Error in sdf_stack_init: already initialised\n");
+        return;
+    }
+
+    h->stack_handle = stack_init();
 }

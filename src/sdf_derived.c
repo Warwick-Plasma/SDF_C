@@ -66,10 +66,10 @@ static sdf_block_t *sdf_callback_boundary_mesh(sdf_file_t *h, sdf_block_t *b)
     vector_t *vertijk = vector_new();
 
     h->current_block = grid;
-    stack_alloc(h->current_block);
+    sdf_stack_alloc(h, h->current_block);
     sdf_read_data(h);
     h->current_block = b->subblock;
-    stack_alloc(h->current_block);
+    sdf_stack_alloc(h, h->current_block);
     sdf_read_data(h);
     h->current_block = current_block;
 
@@ -329,10 +329,10 @@ static sdf_block_t *sdf_callback_surface_mesh(sdf_file_t *h, sdf_block_t *b)
     vector_t *boundary = vector_new();
 
     h->current_block = grid;
-    stack_alloc(h->current_block);
+    sdf_stack_alloc(h, h->current_block);
     sdf_read_data(h);
     h->current_block = b->subblock;
-    stack_alloc(h->current_block);
+    sdf_stack_alloc(h, h->current_block);
     sdf_read_data(h);
     h->current_block = current_block;
 
@@ -497,7 +497,7 @@ static sdf_block_t *sdf_callback_surface(sdf_file_t *h, sdf_block_t *b)
 
     if (!b->subblock->data) {
         h->current_block = b->subblock;
-        stack_alloc(h->current_block);
+        sdf_stack_alloc(h, h->current_block);
         sdf_read_data(h);
         h->current_block = current_block;
     }
@@ -530,7 +530,7 @@ static sdf_block_t *sdf_callback_grid_component(sdf_file_t *h, sdf_block_t *b)
 
     if (!mesh->done_data) {
         h->current_block = mesh;
-        stack_alloc(h->current_block);
+        sdf_stack_alloc(h, h->current_block);
         sdf_read_data(h);
         h->current_block = current_block;
     }
@@ -556,7 +556,7 @@ static sdf_block_t *sdf_callback_face_grid(sdf_file_t *h, sdf_block_t *b)
 
     if (!old->grids) {
         h->current_block = old;
-        stack_alloc(h->current_block);
+        sdf_stack_alloc(h, h->current_block);
         sdf_read_data(h);
         h->current_block = current_block;
     }
@@ -636,14 +636,14 @@ static sdf_block_t *sdf_callback_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
 
     if (!split->done_data) {
         h->current_block = split;
-        stack_alloc(h->current_block);
+        sdf_stack_alloc(h, h->current_block);
         sdf_read_data(h);
         h->current_block = current_block;
     }
 
     if (!mesh->done_data) {
         h->current_block = mesh;
-        stack_alloc(h->current_block);
+        sdf_stack_alloc(h, h->current_block);
         sdf_read_data(h);
         h->current_block = current_block;
     }
@@ -737,7 +737,7 @@ static sdf_block_t *sdf_callback_current_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
 
     if (!mesh->done_data) {
         h->current_block = mesh;
-        stack_alloc(h->current_block);
+        sdf_stack_alloc(h, h->current_block);
         sdf_read_data(h);
         h->current_block = current_block;
     }
@@ -829,7 +829,7 @@ static sdf_block_t *sdf_callback_station_time(sdf_file_t *h, sdf_block_t *b)
         if (!mesh->done_data) {
             current_block = h->current_block;
             h->current_block = mesh;
-            stack_alloc(h->current_block);
+            sdf_stack_alloc(h, h->current_block);
             sdf_read_data(h);
             h->current_block = current_block;
         }

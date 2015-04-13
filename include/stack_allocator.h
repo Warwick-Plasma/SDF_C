@@ -16,13 +16,23 @@
 extern "C" {
 #endif
 
-void stack_alloc(sdf_block_t *b);
-void stack_free_block(sdf_block_t *b);
-void stack_push_to_bottom(sdf_block_t *b);
-void stack_freeup_memory(void);
-void stack_free(void);
-void stack_destroy(void);
-void stack_init(void);
+typedef struct stack_handle stack_handle_t;
+
+void stack_alloc(stack_handle_t *sh, sdf_block_t *b);
+void stack_free_block(stack_handle_t *sh, sdf_block_t *b);
+void stack_push_to_bottom(stack_handle_t *sh, sdf_block_t *b);
+void stack_freeup_memory(stack_handle_t *sh);
+void stack_free(stack_handle_t *sh);
+void stack_destroy(stack_handle_t *sh);
+stack_handle_t *stack_init(void);
+
+void sdf_stack_alloc(sdf_file_t *h, sdf_block_t *b);
+void sdf_stack_free_block(sdf_file_t *h, sdf_block_t *b);
+void sdf_stack_push_to_bottom(sdf_file_t *h, sdf_block_t *b);
+void sdf_stack_freeup_memory(sdf_file_t *h);
+void sdf_stack_free(sdf_file_t *h);
+void sdf_stack_destroy(sdf_file_t *h);
+void sdf_stack_init(sdf_file_t *h);
 
 #ifdef __cplusplus
 }
