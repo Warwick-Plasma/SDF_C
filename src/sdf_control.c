@@ -385,6 +385,7 @@ int sdf_free_block(sdf_file_t *h, sdf_block_t *b)
     FREE_ITEM(b->mimetype);
     FREE_ITEM(b->checksum_type);
     FREE_ITEM(b->checksum);
+    FREE_ITEM(b->must_read);
 
     FREE_ARRAY(b, station_ids);
     FREE_ARRAY(b, station_names);

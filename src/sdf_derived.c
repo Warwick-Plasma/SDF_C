@@ -1697,6 +1697,8 @@ int sdf_add_derived_blocks(sdf_file_t *h)
         h->nblocks += nappend;
     }
 
+    free(append_head);
+
     h->current_block = current_block;
 
     return 0;
@@ -1903,6 +1905,8 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
         h->tail = append_tail;
         h->nblocks += nappend;
     }
+
+    free(append_head);
 
     h->current_block = current_block;
 
