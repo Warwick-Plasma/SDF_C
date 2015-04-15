@@ -163,6 +163,7 @@ static int sdf_helper_read_array(sdf_file_t *h, void **var_in, size_t count)
         moff = h->current_location - mstart;
         b->mmap_len = mlen = length + moff;
         b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
+        if (*var) free(*var);
         *var = moff + b->mmap;
         return 0;
     }

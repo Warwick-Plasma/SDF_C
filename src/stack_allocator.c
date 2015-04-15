@@ -59,18 +59,21 @@ void stack_alloc(stack_handle_t *sh, sdf_block_t *b)
 
 static void stack_free_data_or_grid(stack_handle_t *sh, sdf_block_t *b)
 {
-    int i;
+    int i, nmin;
 
     if (b->dont_allocate == 0) {
         if (b->grids) {
-            for (i = 0; i < b->ngrids; i++) {
+            nmin = 0;
+            if (b->mmap) nmin = b->ndims;
+
+            for (i = nmin; i < b->ngrids; i++) {
                 free(b->grids[i]);
                 sh->memory_size -=
                     b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
+                sh->memory_size -= sizeof(*b->grids);
             }
-            sh->memory_size -= b->ngrids * sizeof(*b->grids);
             free(b->grids);
-        } else {
+        } else if (!b->mmap) {
             free(b->data);
             sh->memory_size -=
                 b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
