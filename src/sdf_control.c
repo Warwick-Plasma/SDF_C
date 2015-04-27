@@ -229,6 +229,8 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
     // block header length - must be updated if sdf_write_block_header changes
     h->block_header_length = SDF_BLOCK_HEADER_LENGTH;
 
+    h->par_visit = 0;
+
 #ifdef PARALLEL
     h->comm = comm;
     MPI_Comm_rank(h->comm, &h->rank);
@@ -677,6 +679,16 @@ int sdf_get_domain_bounds(sdf_file_t *h, int rank, int *starts, int *local_dims)
             starts[n] = coords * (npoint_min + 1);
             local_dims[n] = npoint_min + 1;
         }
+
+        // Add a layer of ghost cells for the VisIt reader
+        if ( h->par_visit ) {
+           if ( b->proc_min[n] != MPI_PROC_NULL ) {
+              local_dims[n]++;
+              starts[n]--;
+           }
+           if ( b->proc_max[n] != MPI_PROC_NULL )
+              local_dims[n]++;
+        }
     }
 
     // Return dimensions back to their original values
@@ -689,7 +701,13 @@ int sdf_get_domain_bounds(sdf_file_t *h, int rank, int *starts, int *local_dims)
     memset(starts, 0, 3*sizeof(*starts));
     for (n=0; n < b->ndims; n++) local_dims[n] = b->dims[n];
 #endif
-    for (n=b->ndims; n < 3; n++) local_dims[n] = 1;
+    for (n=b->ndims; n < 3; n++) {
+       local_dims[n] = 1;
+#ifdef PARALLEL
+       b->proc_min[n] = MPI_PROC_NULL;
+       b->proc_max[n] = MPI_PROC_NULL;
+#endif
+    }
 
     return 0;
 }
