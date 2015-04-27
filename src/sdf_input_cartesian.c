@@ -394,6 +394,7 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
         moff = h->current_location - mstart;
         b->mmap_len = mlen = length + moff;
         b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
+        if (*var_ptr) free(*var_ptr);
         *var_ptr = moff + b->mmap;
         return length;
     }
