@@ -5,7 +5,7 @@
    @details Routines for reading and writing SDF files.
    @author Dr Keith Bennett
    @date 15/02/2014
-   @version 10.0
+   @version 11.0
 */
 
 #ifndef _SDF_COMMON_H_
@@ -20,7 +20,7 @@
 
 #define SDF_VERSION  1
 #define SDF_REVISION 2
-#define SDF_LIB_VERSION  10
+#define SDF_LIB_VERSION  11
 #define SDF_LIB_REVISION 0
 
 #define SDF_MAGIC "SDF1"
@@ -287,7 +287,7 @@ struct sdf_block {
     int32_t nstations, nvariables, step, step_increment;
     int32_t *dims_in, *station_nvars, *variable_types, *station_index;
     int32_t *station_move;
-    int nm, n_ids, opt, ng, nfaces, ngrids;
+    int nm, n_ids, opt, ng, nfaces, ngrids, offset, ngb[6];
     char const_value[16];
     char *id, *units, *mesh_id, *material_id;
     char *vfm_id, *obstacle_id, *station_id;
@@ -299,7 +299,7 @@ struct sdf_block {
     void **grids, *data;
     char done_header, done_info, done_data, dont_allocate, dont_display;
     char dont_own_data, use_mult, next_block_modified, rewrite_metadata;
-    char in_file;
+    char in_file, ng_any, no_internal_ghost;
     sdf_block_t *next, *prev;
     sdf_block_t *subblock, *subblock2;
     sdf_block_t *(*populate_data)(sdf_file_t *, sdf_block_t *);
