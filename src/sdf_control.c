@@ -679,13 +679,16 @@ int sdf_get_domain_bounds(sdf_file_t *h, int rank, int *starts, int *local_dims)
         }
 
         // Add a layer of ghost cells for the VisIt reader
-        if (h->internal_ghost_cells) {
+        if (h->internal_ghost_cells && !b->no_internal_ghost) {
             if (b->proc_min[n] != MPI_PROC_NULL) {
+                b->ngb[2*n] = 1;
                 local_dims[n]++;
                 starts[n]--;
             }
-            if (b->proc_max[n] != MPI_PROC_NULL)
+            if (b->proc_max[n] != MPI_PROC_NULL) {
+                b->ngb[2*n+1] = 1;
                 local_dims[n]++;
+            }
         }
     }
 
