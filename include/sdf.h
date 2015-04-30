@@ -353,12 +353,8 @@ struct sdf_file {
 #endif
     comm_t comm;
 
-    /* Flag to tell the function sdf_get_domain_bounds that one layer
-     * of ghost cells is required for the VisIt reader, but we cannot
-     * use MPI communications to exchange ghost cell data between
-     * processes.
-     */
-    int par_visit;
+    /* Flag to add internal ghost cells for the VisIt reader */
+    int internal_ghost_cells;
 };
 
 struct run_info {
