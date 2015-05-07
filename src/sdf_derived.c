@@ -765,7 +765,7 @@ static sdf_block_t *sdf_callback_current_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
 #endif
         idx = mesh->ngb[2*n];
         x = calloc(nx, sz);
-        memcpy(x+sz*i0, mesh->grids[n] + sz*idx, sz);
+        memcpy(x+sz*i0, (char*)mesh->grids[n] + sz*idx, sz);
         if (pmax) {
             idx = mesh->local_dims[n] - 1;
             memcpy(x+sz*(i0+1), (char*)mesh->grids[n]+sz*idx, sz);
