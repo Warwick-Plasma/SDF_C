@@ -724,7 +724,7 @@ static sdf_block_t *sdf_callback_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
 
 static sdf_block_t *sdf_callback_current_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
 {
-    int n, nx, sz, idx, i0 = 0, pmax = -2;
+    int n, nx, sz, idx, i0 = 0, pmax = 1;
     char *x;
     sdf_block_t *mesh = b->subblock;
     sdf_block_t *current_block = h->current_block;
@@ -759,14 +759,17 @@ static sdf_block_t *sdf_callback_current_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
         i0 = rem%nx;
         rem = rem / nx;
         b->local_dims[n] = ++nx;
-        pmax = mesh->proc_max[n];
+        pmax = (mesh->proc_max[n] == MPI_PROC_NULL);
 #else
         nx = b->local_dims[n] = 2;
 #endif
-        idx = mesh->local_dims[n] - 1;
+        idx = mesh->ngb[2*n];
         x = calloc(nx, sz);
-        memcpy(x+sz*i0, mesh->grids[n], sz);
-        if (pmax < 0) memcpy(x+sz*(i0+1), (char*)mesh->grids[n]+sz*idx, sz);
+        memcpy(x+sz*i0, (char*)mesh->grids[n] + sz*idx, sz);
+        if (pmax) {
+            idx = mesh->local_dims[n] - 1;
+            memcpy(x+sz*(i0+1), (char*)mesh->grids[n]+sz*idx, sz);
+        }
         b->nelements_local += nx;
 #ifdef PARALLEL
         buf = malloc(nx*sz);
@@ -835,9 +838,9 @@ static sdf_block_t *sdf_callback_station_time(sdf_file_t *h, sdf_block_t *b)
         }
 
         if (b->datatype_out == SDF_DATATYPE_REAL4)
-            b->data = (float*)mesh->data + b->ng;
+            b->data = (float*)mesh->data + b->offset;
         else
-            b->data = (double*)mesh->data + b->ng;
+            b->data = (double*)mesh->data + b->offset;
 
         if (!b->grids) {
             b->ngrids = 1;
@@ -1144,7 +1147,7 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
         mesh->local_dims[0] = mesh->dims[0] = mesh->nelements;
         mesh->datatype = mesh->datatype_out = mesh_datatype;
         mesh->subblock = global_mesh;
-        mesh->ng = nsofar;
+        mesh->offset = nsofar;
         mesh->dont_own_data = 1;
         mesh->option = b->ndims;
 
@@ -1207,7 +1210,7 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
                 nsofar += sb->nelements;
                 sb = list_next(station_blocks);
             }
-            b->ng = nsofar;
+            b->offset = nsofar;
         }
     }
 
@@ -1564,6 +1567,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             append->subblock2 = mesh;
             append->populate_data = sdf_callback_cpu_mesh;
             append->blocktype = SDF_BLOCKTYPE_PLAIN_MESH;
+            append->no_internal_ghost = 1;
 
             append->ndims = b->ndims;
             for (i = 0; i < b->ndims; i++) append->dims[i] = b->dims[i] + 2;
@@ -1609,6 +1613,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
 
             append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
             append->derived = 1;
+            append->no_internal_ghost = 1;
 
             SDF_SET_ENTRY_ID(append->mesh_id, mesh->id);
             SDF_SET_ENTRY_ID(append->units, "CPU");
@@ -1644,6 +1649,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
         append->subblock = first_mesh;
         append->populate_data = sdf_callback_current_cpu_mesh;
         append->blocktype = SDF_BLOCKTYPE_PLAIN_MESH;
+        append->no_internal_ghost = 1;
 
         nd = append->ndims = first_mesh->ndims;
 
@@ -1676,6 +1682,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
 
         append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
         append->derived = 1;
+        append->no_internal_ghost = 1;
 
         SDF_SET_ENTRY_ID(append->units, "CPU");
         SDF_SET_ENTRY_ID(append->mesh_id, mesh->id);
