@@ -630,7 +630,8 @@ static int sdf_read_stitched(sdf_file_t *h)
     SDF_READ_ENTRY_ARRAY_ID(b->variable_ids, b->ndims);
     b->nvariable_ids = b->ndims;
 
-    b->done_data = 1;
+    if (b->blocktype == SDF_BLOCKTYPE_STITCHED
+            || b->blocktype == SDF_BLOCKTYPE_STITCHED_TENSOR) b->done_data = 1;
 
     return 0;
 }
