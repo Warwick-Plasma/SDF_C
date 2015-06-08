@@ -772,6 +772,11 @@ char *sdf_get_library_commit_id(void);
 char *sdf_get_library_commit_date(void);
 
 
+/**
+ @brief Prints the name and version of any loaded extension modules
+ */
+void sdf_extension_print_version(sdf_file_t *h);
+
 #ifdef __cplusplus
 }
 #endif

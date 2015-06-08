@@ -176,3 +176,23 @@ int sdf_read_blocklist_all(sdf_file_t *h)
 
     return 0;
 }
+
+
+void sdf_extension_print_version(sdf_file_t *h)
+{
+    int major, minor;
+    sdf_extension_t *ext;
+
+    // Retrieve the extended interface library from the plugin manager
+    sdf_extension_load(h);
+    ext = sdf_global_extension;
+
+    if (ext) {
+        ext->get_version(ext, &major, &minor);
+        printf("Loaded extension: %s-%d.%d\n", ext->get_name(ext), major, minor);
+    } else {
+        printf("No extension loaded\n");
+        if (sdf_global_extension_failed)
+            printf("%s\n", h->error_message);
+    }
+}
