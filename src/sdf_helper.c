@@ -9,19 +9,20 @@ int sdf_helper_read_data(sdf_file_t *h, sdf_block_t *b)
     int i;
     sdf_block_t *block;
 
-    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_DERIVED ||
-            b->blocktype == SDF_BLOCKTYPE_POINT_DERIVED) {
-        for (i = 0; i < b->n_ids; i++) {
-            // Fill in derived components which are not already cached
-            if (b->must_read[i]) {
-                block = sdf_find_block_by_id(h, b->variable_ids[i]);
-                if (block && !block->data) {
-                    sdf_block_set_array_section(block, b->ndims,
-                            b->array_starts, b->array_ends, b->array_strides);
-                    sdf_helper_read_data(h, block);
-                }
+    for (i = 0; i < b->n_ids; i++) {
+        // Fill in derived components which are not already cached
+        if (b->must_read[i]) {
+            block = sdf_find_block_by_id(h, b->variable_ids[i]);
+            if (block && !block->data) {
+                sdf_block_set_array_section(block, b->ndims,
+                        b->array_starts, b->array_ends, b->array_strides);
+                sdf_helper_read_data(h, block);
             }
         }
+    }
+
+    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_DERIVED ||
+            b->blocktype == SDF_BLOCKTYPE_POINT_DERIVED) {
 
         // Allocate derived variable data if required
         if (!b->data && !b->dont_allocate) {
