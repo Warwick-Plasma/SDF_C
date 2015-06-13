@@ -10,6 +10,7 @@ static void *sdf_global_extension = NULL;
 static void *sdf_global_extension_dlhandle = NULL;
 static int   sdf_global_extension_failed = 0;
 
+int sdf_purge_duplicates(sdf_file_t *h);
 
 void *sdf_extension_load(sdf_file_t *h)
 {
@@ -122,6 +123,7 @@ int sdf_read_blocklist_all(sdf_file_t *h)
 
     // Append additional derived data for blocks added by the extension.
     sdf_add_derived_blocks_final(h);
+    sdf_purge_duplicates(h);
 
     // Fill in dimensions for derived blocks
     next = h->last_block_in_file;

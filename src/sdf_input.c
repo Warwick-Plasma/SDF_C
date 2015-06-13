@@ -232,6 +232,77 @@ int sdf_read_summary(sdf_file_t *h)
 
 
 
+int sdf_purge_duplicates(sdf_file_t *h)
+{
+    sdf_block_t *b, *next, *sub, *subnext;
+    int len, sublen, pos, unique, i;
+
+    // Remove or mangle the IDs of any duplicated blocks
+    next = h->blocklist;
+    while (next) {
+        b = next;
+        next = b->next;
+
+        len = strlen(b->id) + 1;
+        subnext = next;
+        while (subnext) {
+            sub = subnext;
+            subnext = sub->next;
+
+            sublen = strlen(sub->id) + 1;
+            if (len != sublen || memcmp(b->id, sub->id, len) != 0)
+                continue;
+
+            // Found a duplicated ID. Either discard the block or mangle the ID
+            if (h->purge_duplicated_ids) {
+                sdf_modify_remove_block(h, b);
+            } else {
+                pos = sublen - 2;
+                if (pos == h->id_length) pos--;
+
+                // Mangle ID by appending an integer. Allow for up to 99
+                // duplicated blocks
+                for (i=1; i < 99; i++) {
+                    if (i == 10 && pos == h->id_length - 1) pos--;
+
+                    sprintf(b->id + pos, "%d", i);
+
+                    unique = 1;
+                    len = strlen(b->id) + 1;
+                    // Check that the new ID is unique
+                    subnext = h->blocklist;
+                    while (subnext && subnext != h->last_block_in_file) {
+                        sub = subnext;
+                        subnext = sub->next;
+                        if (sub == b)
+                            continue;
+
+                        sublen = strlen(sub->id) + 1;
+                        if (len != sublen || memcmp(b->id, sub->id, len) != 0)
+                            continue;
+
+                        unique = 0;
+                        break;
+                    }
+
+                    if (unique) break;
+                }
+
+                // Discard block if we can't find a unique ID
+                if (!unique) {
+                    sdf_modify_remove_block(h, b);
+                }
+            }
+
+            break;
+        }
+    }
+
+    return 0;
+}
+
+
+
 int sdf_read_blocklist(sdf_file_t *h)
 {
     int i;
@@ -253,6 +324,8 @@ int sdf_read_blocklist(sdf_file_t *h)
     h->buffer = NULL;
     h->current_block = h->blocklist;
     h->last_block_in_file = h->tail;
+
+    sdf_purge_duplicates(h);
 
 #ifdef PARALLEL
     // Hack to fix cartesian blocks whose mesh sizes don't match the stagger

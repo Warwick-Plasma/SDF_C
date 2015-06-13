@@ -20,7 +20,7 @@
 
 #define SDF_VERSION  1
 #define SDF_REVISION 2
-#define SDF_LIB_VERSION  11
+#define SDF_LIB_VERSION  12
 #define SDF_LIB_REVISION 0
 
 #define SDF_MAGIC "SDF1"
@@ -345,16 +345,15 @@ struct sdf_file {
     char *mmap;
     void *ext_data;
     void *stack_handle;
-    int array_count, fd;
+    int array_count, fd, purge_duplicated_ids;
+    /* Flag to add internal ghost cells for the VisIt reader */
+    int internal_ghost_cells;
 #ifdef PARALLEL
     MPI_File filehandle;
 #else
     FILE *filehandle;
 #endif
     comm_t comm;
-
-    /* Flag to add internal ghost cells for the VisIt reader */
-    int internal_ghost_cells;
 };
 
 struct run_info {
