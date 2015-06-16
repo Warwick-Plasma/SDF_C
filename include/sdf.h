@@ -751,6 +751,19 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
       char **var_names, int nvars, double t0, double t1, char **timehis,
       int *size, int *offset, int *nrows, int *row_size);
 
+
+/**
+ @brief Returns string containing the commit id for the library
+ */
+char *sdf_get_library_commit_id(void);
+
+
+/**
+ @brief Returns string containing the commit date for the library
+ */
+char *sdf_get_library_commit_date(void);
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -3,3 +3,4 @@ html/
 latex/
 obj*
 lib/libsdf.a
+src/commit_info.h
