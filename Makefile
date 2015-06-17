@@ -54,7 +54,7 @@ endif
 include Makefile-objs
 
 # target name
-LIB = $(LIBDIR)/libsdf.a
+LIB = $(LIBDIR)/libsdfc.a
 
 VPATH = $(SRCDIR):$(OBJDIR):$(LIBDIR):$(INCDIR)
 
@@ -69,6 +69,9 @@ all: $(LIB)
 # implicit rules
 %.o: %.c
 	$(CC) -c $(CFLAGS) -o $(OBJDIR)/$@ $<
+
+commit_info.h:
+	@cd $(SRCDIR) && sh gen_commit_string.sh || true
 
 $(LIB): $(OBJS)
 	$(RM) -f $@
@@ -93,7 +96,7 @@ clean:
 	$(RM) -rf $(OBJDIR)
 
 cleanall:
-	$(RM) -rf obj_* $(LIBDIR)
+	$(RM) -rf obj_* $(LIBDIR) $(SRCDIR)/commit_info.h
 
 # help page
 help:
@@ -109,3 +112,5 @@ help:
 
 # dependencies file
 #include Makefile-deps
+
+sdf_control.o: commit_info.h

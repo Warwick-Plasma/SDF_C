@@ -6,6 +6,7 @@
 #include <sdf.h>
 #include "sdf_control.h"
 #include "sdf_util.h"
+#include "commit_info.h"
 
 #ifdef PARALLEL
 #include <mpi.h>
@@ -1005,4 +1006,16 @@ int sdf_block_set_array_section(sdf_block_t *b, const int ndims,
     }
 
     return 0;
+}
+
+
+char *sdf_get_library_commit_id(void)
+{
+    return strdup(SDF_COMMIT_ID);
+}
+
+
+char *sdf_get_library_commit_date(void)
+{
+    return strdup(SDF_COMMIT_DATE);
 }
