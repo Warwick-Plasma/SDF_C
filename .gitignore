@@ -2,5 +2,5 @@
 html/
 latex/
 obj*
-lib/libsdf.a
+lib/libsdfc.a
 src/commit_info.h

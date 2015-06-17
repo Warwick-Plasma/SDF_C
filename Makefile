@@ -54,7 +54,7 @@ endif
 include Makefile-objs
 
 # target name
-LIB = $(LIBDIR)/libsdf.a
+LIB = $(LIBDIR)/libsdfc.a
 
 VPATH = $(SRCDIR):$(OBJDIR):$(LIBDIR):$(INCDIR)
 
