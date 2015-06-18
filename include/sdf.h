@@ -5,7 +5,7 @@
    @details Routines for reading and writing SDF files.
    @author Dr Keith Bennett
    @date 15/02/2014
-   @version 11.0
+   @version 12.0
 */
 
 #ifndef _SDF_COMMON_H_
@@ -20,7 +20,7 @@
 
 #define SDF_VERSION  1
 #define SDF_REVISION 2
-#define SDF_LIB_VERSION  11
+#define SDF_LIB_VERSION  12
 #define SDF_LIB_REVISION 0
 
 #define SDF_MAGIC "SDF1"
@@ -345,16 +345,15 @@ struct sdf_file {
     char *mmap;
     void *ext_data;
     void *stack_handle;
-    int array_count, fd;
+    int array_count, fd, purge_duplicated_ids;
+    /* Flag to add internal ghost cells for the VisIt reader */
+    int internal_ghost_cells;
 #ifdef PARALLEL
     MPI_File filehandle;
 #else
     FILE *filehandle;
 #endif
     comm_t comm;
-
-    /* Flag to add internal ghost cells for the VisIt reader */
-    int internal_ghost_cells;
 };
 
 struct run_info {
@@ -751,6 +750,19 @@ int sdf_block_set_array_section(sdf_block_t *b, const int ndims,
 int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
       char **var_names, int nvars, double t0, double t1, char **timehis,
       int *size, int *offset, int *nrows, int *row_size);
+
+
+/**
+ @brief Returns string containing the commit id for the library
+ */
+char *sdf_get_library_commit_id(void);
+
+
+/**
+ @brief Returns string containing the commit date for the library
+ */
+char *sdf_get_library_commit_date(void);
+
 
 #ifdef __cplusplus
 }

@@ -11,6 +11,7 @@
 #define SDF_SET_ENTRY_STRINGLEN(value, strvalue, length) do { \
         if (!(value)) value = malloc(h->string_length+1); \
         strncpy((value), (strvalue), (length)); \
+        value[h->string_length-1] = '\0'; \
     } while (0)
 
 #define SDF_SET_ENTRY_ID(value, strvalue) do { \
@@ -45,6 +46,45 @@ static char *strcat_alloc(char *base, char *sfx)
     memcpy(str+len1+1, sfx, len2); \
     str[len1+len2+1] = '\0';
     return str;
+}
+
+
+
+void sdf_unique_id(sdf_file_t *h, char *id)
+{
+    sdf_block_t *b, *next;
+    int i, pos, len, sublen, unique;
+
+    len = strlen(id);
+    if (len >= h->id_length - 1) id[h->id_length-1] = '\0';
+
+    for (i=0; i < 99; i++) {
+        next = h->blocklist;
+
+        unique = 1;
+        while (next) {
+            b = next;
+            next = b->next;
+
+            if (b->id == id) continue;
+
+            sublen = strlen(b->id) + 1;
+
+            if (len == sublen && memcmp(b->id, id, len) == 0) {
+                unique = 0;
+                break;
+            }
+        }
+
+        if (unique) break;
+
+        pos = len - 2;
+        if (pos == h->id_length) pos--;
+        if (i == 9 && pos == h->id_length - 1) pos--;
+
+        sprintf(id + pos, "%d", i+1);
+        len = strlen(id);
+    }
 }
 
 
@@ -1018,6 +1058,7 @@ static void add_surface_variables(sdf_file_t *h, sdf_block_t *surf,
         str[len1] = '/';
         memcpy(str+len1+1, name2, len2);
         str[len1+len2+1] = '\0';
+        sdf_unique_id(h, str);
         append->id = str;
 
         name1 = surf->name;
@@ -1062,6 +1103,7 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
     sdf_block_t *b, *sb, *global_mesh, *mesh, *station = *append;
     char *meshid = "global_station/time";
     char *meshname = "Station/Time";
+    char *str;
     int varoffset, mesh_datatype, var, i, j, n, is, nelements, nsofar;
     int *nelements_array;
     list_t *station_blocks;
@@ -1132,7 +1174,9 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
         *append_tail = *append;
         mesh = *append;
 
-        mesh->id = strcat_alloc(meshid, b->id);
+        str = strcat_alloc(meshid, b->id);
+        sdf_unique_id(h, str);
+        mesh->id = str;
         mesh->name = strcat_alloc(meshname, b->name);
         SDF_SET_ENTRY_ID(mesh->units, "s");
         mesh->blocktype = SDF_BLOCKTYPE_PLAIN_MESH;
@@ -1179,8 +1223,10 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
             *append_tail = *append;
             b = *append;
 
-            b->id = strcat_alloc(station->station_ids[i],
+            str = strcat_alloc(station->station_ids[i],
                     station->variable_ids[var]);
+            sdf_unique_id(h, str);
+            b->id = str;
             b->name = strcat_alloc(station->station_names[i],
                     station->material_names[var]);
             b->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
@@ -1203,7 +1249,9 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
                     if (strncmp(sb->station_ids[n], b->station_id,
                             h->id_length) != 0) continue;
                     if (sb->station_move[n] < 0) continue;
-                    b->mesh_id = strcat_alloc(meshid, sb->id);
+                    str = strcat_alloc(meshid, sb->id);
+                    sdf_unique_id(h, str);
+                    b->mesh_id = str;
                     break;
                 }
                 if (b->mesh_id) break;
@@ -1497,14 +1545,17 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                     str[len1] = '/';
                     memcpy(str+len1+1, name2, len2);
                     str[len1+len2+1] = '\0';
+                    sdf_unique_id(h, str);
                     append->id = str;
 
                     append->blocktype = SDF_BLOCKTYPE_POINT_DERIVED;
                     append->derived = 1;
                     name2 = b->dim_labels[i];
                 } else {
-                    append->id = NULL;
-                    SDF_SET_ENTRY_ID(append->id, grid_ids[i]);
+                    str = NULL;
+                    SDF_SET_ENTRY_ID(str, grid_ids[i]);
+                    sdf_unique_id(h, str);
+                    append->id = str;
 
                     append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
                     append->derived = 1;
@@ -1555,6 +1606,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             str = malloc(len1+6);
             memcpy(str, "grid_", 5);
             memcpy(str+5, b->id, len1+1);
+            sdf_unique_id(h, str);
             append->id = str;
 
             len1 = strlen(b->name);
@@ -1601,6 +1653,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             str = malloc(len1+7);
             memcpy(str, append->id, len1);
             memcpy(str+len1, "_orig", 6);
+            sdf_unique_id(h, str);
             b->id = str;
 
             str = b->name;
@@ -1774,6 +1827,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 memcpy(str, name1, len1);
                 memcpy(str+len1, name2, len2);
                 str[len1+len2] = '\0';
+                sdf_unique_id(h, str);
                 append->id = str;
 
                 name1 = "Surface Values/";
@@ -1809,6 +1863,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 memcpy(str, name1, len1);
                 memcpy(str+len1, name2, len2);
                 str[len1+len2] = '\0';
+                sdf_unique_id(h, str);
                 append->id = str;
 
                 name1 = "Surface Values/boundary";
@@ -1852,6 +1907,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                     memcpy(str+len1+1, name2, len2);
                     str[len1+len2+1] = '\0';
                     free(b->mesh_id);
+                    sdf_unique_id(h, str);
                     b->mesh_id = str;
 
                     // Add new face grid if it doesn't exist
@@ -1868,6 +1924,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
 
                         str = (char*)malloc(len1 + len2 + 2);
                         memcpy(str, b->mesh_id, len1+len2+2);
+                        sdf_unique_id(h, str);
                         append->id = str;
 
                         name1 = old_mesh->name;
