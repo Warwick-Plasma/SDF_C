@@ -5,7 +5,7 @@
    @details Routines for reading and writing SDF files.
    @author Dr Keith Bennett
    @date 15/02/2014
-   @version 11.0
+   @version 12.0
 */
 
 #ifndef _SDF_COMMON_H_
