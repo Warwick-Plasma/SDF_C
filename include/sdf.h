@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <inttypes.h>
 
+#include "uthash.h"
+
 #ifdef PARALLEL
 #include <mpi.h>
 #endif
@@ -315,6 +317,8 @@ struct sdf_block {
 #ifdef PARALLEL
     MPI_Datatype mpitype, distribution, mpitype_out;
 #endif
+
+    UT_hash_handle hh;
 };
 
 struct sdf_file {
@@ -354,6 +358,8 @@ struct sdf_file {
     FILE *filehandle;
 #endif
     comm_t comm;
+
+    sdf_block_t *hashed_blocks_by_id;
 };
 
 struct run_info {
