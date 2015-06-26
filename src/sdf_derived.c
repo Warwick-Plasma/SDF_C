@@ -1088,6 +1088,8 @@ static void add_surface_variables(sdf_file_t *h, sdf_block_t *surf,
         // Hack to prevent storage being allocated for this variable.
         append->dont_allocate = 1;
         append->populate_data = sdf_callback_surface;
+
+        sdf_hash_block(h, append);
     }
 
     *nappend_ptr = nappend;
@@ -1165,6 +1167,8 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
     mesh->datatype = mesh->datatype_out = mesh_datatype;
     mesh->option = station->ndims;
 
+    sdf_hash_block(h, mesh);
+
     /* Add per-station-block time meshes */
     nsofar = 0;
     b = list_start(station_blocks);
@@ -1197,6 +1201,8 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
 
         nsofar += b->nelements;
         b = list_next(station_blocks);
+
+        sdf_hash_block(h, mesh);
     }
 
     free(nelements_array);
@@ -1259,6 +1265,8 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
                 sb = list_next(station_blocks);
             }
             b->offset = nsofar;
+
+            sdf_hash_block(h, b);
         }
     }
 
@@ -1298,6 +1306,7 @@ static void add_global_station(sdf_file_t *h, sdf_block_t **append,
     new->derived = 1;
     SDF_SET_ENTRY_ID(new->id, "global_stations");
     SDF_SET_ENTRY_STRING(new->name, "Global Stations");
+    sdf_hash_block(h, new);
 
     nelements = 0;
     extra_id = calloc(nstat_max, sizeof(*extra_id));
@@ -1587,6 +1596,8 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                 append->done_header = 1;
                 // Hack to prevent storage being allocated for this variable.
                 append->dont_allocate = 1;
+
+                sdf_hash_block(h, append);
             }
         } else if (b->blocktype == SDF_BLOCKTYPE_CPU_SPLIT) {
             // Find first grid mesh
@@ -1640,6 +1651,8 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             }
             mesh = append;
 
+            sdf_hash_block(h, append);
+
             // Now add CPU data block
             APPEND_BLOCK(append);
             nappend++;
@@ -1647,6 +1660,9 @@ int sdf_add_derived_blocks(sdf_file_t *h)
 
             // Rename original block so that we can use the original name
             // for plotting
+
+            sdf_delete_hash_block(h, b);
+
             str = b->id;
             append->id = str;
             len1 = strlen(str);
@@ -1663,6 +1679,8 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             memcpy(str, append->name, len1);
             memcpy(str+len1, "_orig", 6);
             b->name = str;
+
+            sdf_hash_block(h, b);
 
             append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
             append->derived = 1;
@@ -1687,6 +1705,8 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             append->must_read[0] = 1;
             append->populate_data = sdf_callback_cpu_data;
             append->datatype = append->datatype_out = SDF_DATATYPE_INTEGER4;
+
+            sdf_hash_block(h, append);
         }
     }
 
@@ -1725,6 +1745,8 @@ int sdf_add_derived_blocks(sdf_file_t *h)
         }
         mesh = append;
 
+        sdf_hash_block(h, append);
+
         // Now add CPU data block
         APPEND_BLOCK(append);
         nappend++;
@@ -1745,6 +1767,8 @@ int sdf_add_derived_blocks(sdf_file_t *h)
         append->datatype = append->datatype_out = SDF_DATATYPE_INTEGER4;
 
         mesh->subblock2 = append;
+
+        sdf_hash_block(h, append);
     }
 
     if (h->station_file)
@@ -1840,6 +1864,8 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 str[len1+len2] = '\0';
                 append->name = str;
 
+                sdf_hash_block(h, append);
+
                 add_surface_variables(h, append, &append, &append_tail,
                     &nappend);
             }
@@ -1875,6 +1901,8 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 memcpy(str+len1, name2, len2);
                 str[len1+len2] = '\0';
                 append->name = str;
+
+                sdf_hash_block(h, append);
 
                 add_surface_variables(h, append, &append, &append_tail,
                     &nappend);
@@ -1957,6 +1985,8 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                             SDF_SET_ENTRY_STRING(append->dim_units[n],
                                 old_mesh->dim_units[n]);
                         }
+
+                        sdf_hash_block(h, append);
                     }
                 }
             }
