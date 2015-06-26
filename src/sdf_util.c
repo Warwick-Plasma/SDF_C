@@ -10,22 +10,13 @@
 
 sdf_block_t *sdf_find_block_by_id(sdf_file_t *h, const char *id)
 {
-    sdf_block_t *current, *b;
-    size_t len;
-    int i;
+    sdf_block_t *b;
 
     if (!h || !h->blocklist || !id)
         return NULL;
 
-    current = h->blocklist;
-    len = strlen(id) + 1;
-    for (i=0; i < h->nblocks; i++) {
-        b = current;
-        if (memcmp(id, b->id, len) == 0) return b;
-        current = b->next;
-    }
-
-    return NULL;
+    HASH_FIND_STR(h->hashed_blocks_by_id, id, b);
+    return b;
 }
 
 
