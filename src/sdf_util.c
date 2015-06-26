@@ -41,6 +41,16 @@ sdf_block_t *sdf_find_block_by_name(sdf_file_t *h, const char *name)
 }
 
 
+void sdf_delete_hash_block(sdf_file_t *h, sdf_block_t *b)
+{
+   sdf_block_t *bb = NULL;
+
+   HASH_FIND_STR(h->hashed_blocks_by_id, b->id, bb);
+   if ( bb != NULL && b == bb )
+      HASH_DELETE(hh, h->hashed_blocks_by_id, b);
+}
+
+
 void sdf_hash_block(sdf_file_t *h, sdf_block_t *b)
 {
    sdf_block_t *bb = NULL;
