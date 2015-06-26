@@ -487,6 +487,8 @@ static int modify_remove_block(sdf_file_t *h, sdf_block_t *block, int freeit)
         }
     }
 
+    sdf_delete_hash_block(h, block);
+
     if (freeit) sdf_free_block(h, block);
     h->metadata_modified = 1;
     h->nblocks--;
