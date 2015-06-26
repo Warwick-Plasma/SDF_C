@@ -532,6 +532,8 @@ static int sdf_read_next_block_header(sdf_file_t *h)
     b->mpitype_out = b->mpitype;
 #endif
 
+    sdf_hash_block(h, b);
+
     return 0;
 }
 
