@@ -234,8 +234,11 @@ int sdf_read_summary(sdf_file_t *h)
 
 int sdf_purge_duplicates(sdf_file_t *h)
 {
-    sdf_block_t *b, *next, *sub, *subnext;
-    int len, sublen, pos, unique, i;
+    sdf_block_t *b, *next, *subnext;
+    int pos, i;
+
+    // Ensure all blocks have been hashed first
+    sdf_hash_block_list(h);
 
     // Remove or mangle the IDs of any duplicated blocks
     next = h->blocklist;
@@ -243,58 +246,36 @@ int sdf_purge_duplicates(sdf_file_t *h)
         b = next;
         next = b->next;
 
-        len = strlen(b->id) + 1;
-        subnext = next;
-        while (subnext) {
-            sub = subnext;
-            subnext = sub->next;
+        subnext = sdf_find_block_by_id(h, b->id);
+        if ( !subnext || subnext == b )
+           continue;
 
-            sublen = strlen(sub->id) + 1;
-            if (len != sublen || memcmp(b->id, sub->id, len) != 0)
-                continue;
+        if (h->purge_duplicated_ids) {
+           sdf_modify_remove_block(h, b);
+        } else {
+           pos = strlen(b->id);
+           if ( pos == h->id_length )
+              pos--;
 
-            // Found a duplicated ID. Either discard the block or mangle the ID
-            if (h->purge_duplicated_ids) {
-                sdf_modify_remove_block(h, b);
-            } else {
-                pos = sublen - 2;
-                if (pos == h->id_length) pos--;
+           // Mangle ID by appending an integer. Allow for up to 99
+           // duplicated blocks
+           for (i=1; i < 99; i++) {
+              if (i == 10 && pos == h->id_length - 1)
+                 pos--;
 
-                // Mangle ID by appending an integer. Allow for up to 99
-                // duplicated blocks
-                for (i=1; i < 99; i++) {
-                    if (i == 10 && pos == h->id_length - 1) pos--;
+              sprintf(b->id + pos, "%d", i);
 
-                    sprintf(b->id + pos, "%d", i);
+              // Check that the new ID is unique
+              subnext = sdf_find_block_by_id(h, b->id);
+              if ( !subnext )
+                 break;
+           }
 
-                    unique = 1;
-                    len = strlen(b->id) + 1;
-                    // Check that the new ID is unique
-                    subnext = h->blocklist;
-                    while (subnext && subnext != h->last_block_in_file) {
-                        sub = subnext;
-                        subnext = sub->next;
-                        if (sub == b)
-                            continue;
-
-                        sublen = strlen(sub->id) + 1;
-                        if (len != sublen || memcmp(b->id, sub->id, len) != 0)
-                            continue;
-
-                        unique = 0;
-                        break;
-                    }
-
-                    if (unique) break;
-                }
-
-                // Discard block if we can't find a unique ID
-                if (!unique) {
-                    sdf_modify_remove_block(h, b);
-                }
-            }
-
-            break;
+           if ( subnext )
+              // Discard block if we can't find a unique ID
+              sdf_modify_remove_block(h, b);
+           else
+              sdf_hash_block(h, b);
         }
     }
 
