@@ -241,7 +241,7 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
     h->filename = malloc(strlen(filename)+1);
     memcpy(h->filename, filename, strlen(filename)+1);
 
-    h->hashed_blocks_by_id = NULL;
+    h->hashed_blocks_by_id = h->hashed_blocks_by_name = NULL;
 
     sdf_fopen(h, mode);
     if (!h->filehandle) {

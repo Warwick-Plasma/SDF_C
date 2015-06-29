@@ -318,7 +318,7 @@ struct sdf_block {
     MPI_Datatype mpitype, distribution, mpitype_out;
 #endif
 
-    UT_hash_handle hh;
+    UT_hash_handle hh1, hh2;
 };
 
 struct sdf_file {
@@ -359,7 +359,7 @@ struct sdf_file {
 #endif
     comm_t comm;
 
-    sdf_block_t *hashed_blocks_by_id;
+    sdf_block_t *hashed_blocks_by_id, *hashed_blocks_by_name;
 };
 
 struct run_info {
