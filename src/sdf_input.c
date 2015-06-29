@@ -250,6 +250,8 @@ int sdf_purge_duplicates(sdf_file_t *h)
         if ( !subnext || subnext == b )
            continue;
 
+        sdf_delete_hash_block(h, b);
+
         if (h->purge_duplicated_ids) {
            sdf_modify_remove_block(h, b);
         } else {
