@@ -5,7 +5,7 @@
    @details Routines for reading and writing SDF files.
    @author Dr Keith Bennett
    @date 15/02/2014
-   @version 12.0
+   @version 13.0
 */
 
 #ifndef _SDF_COMMON_H_
@@ -22,7 +22,7 @@
 
 #define SDF_VERSION  1
 #define SDF_REVISION 2
-#define SDF_LIB_VERSION  12
+#define SDF_LIB_VERSION  13
 #define SDF_LIB_REVISION 0
 
 #define SDF_MAGIC "SDF1"
@@ -276,7 +276,7 @@ struct sdf_block {
     double *extents, *dim_mults;
     double *station_x, *station_y, *station_z;
     double mult, time, time_increment;
-    int64_t dims[3], local_dims[3];
+    int64_t dims[4], local_dims[4];
     int64_t block_start, next_block_location, data_location;
     int64_t inline_block_start, inline_next_block_location;
     int64_t summary_block_start, summary_next_block_location;
