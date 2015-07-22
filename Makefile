@@ -13,10 +13,10 @@ EXTINC = ../extension/include
 
 ifeq (gcc,$(findstring gcc,$(FLAVOUR)))
    CC = gcc
-   CFLAGS_ALL = -I$(INCDIR) -I$(SRCDIR) -I$(EXTINC) -fPIC
-   CFLAGS_OPT = -O3
-   CFLAGS_DBG = -g -O0 -DSDF_DEBUG_ALL -D_XOPEN_SOURCE=600
-   CFLAGS_DBG = $(CFLAGS_DBG) -Wall -Wextra -Wno-unused-function -pedantic
+   CFLAGS_ALL  = -I$(INCDIR) -I$(SRCDIR) -I$(EXTINC) -fPIC
+   CFLAGS_OPT  = -O3
+   CFLAGS_DBG  = -g -O0 -DSDF_DEBUG_ALL -D_XOPEN_SOURCE=600
+   CFLAGS_DBG += -Wall -Wextra -Wno-unused-function -pedantic
    CFLAGS_PROF = -p
 endif
 
