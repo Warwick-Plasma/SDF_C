@@ -20,5 +20,6 @@ struct sdf_extension_struct {
 
 typedef sdf_extension_t *sdf_extension_create_t(sdf_file_t *h);
 typedef void sdf_extension_destroy_t(sdf_extension_t *);
+typedef void sdf_extension_free_t(sdf_file_t *h);
 
 #endif

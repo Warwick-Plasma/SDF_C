@@ -452,6 +452,8 @@ static int sdf_free_handle(sdf_file_t *h)
             b = next;
         }
     }
+    // Destroy extension data
+    if (h->ext_data) sdf_extension_free_data(h);
     // Destroy handle
     if (h->buffer) free(h->buffer);
     if (h->code_name) free(h->code_name);

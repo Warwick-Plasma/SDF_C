@@ -71,6 +71,27 @@ void sdf_extension_unload(void)
 }
 
 
+void sdf_extension_free_data(sdf_file_t *h)
+{
+    sdf_extension_free_t *sdf_extension_free;
+    void *p;
+
+    if (!sdf_global_extension_dlhandle) return;
+
+    if (sdf_global_extension) {
+        // Weird pointer copying required by ISO C
+        p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_free");
+        if ( !p )
+           return;
+        memcpy(&sdf_extension_free, &p, sizeof(p));
+
+        sdf_extension_free(h);
+    }
+
+    return;
+}
+
+
 int sdf_read_blocklist_all(sdf_file_t *h)
 {
     sdf_extension_t *ext;
