@@ -368,6 +368,8 @@ int sdf_free_block(sdf_file_t *h, sdf_block_t *b)
 {
     if (!b) return 1;
 
+    sdf_delete_hash_block(h, b);
+
     FREE_ITEM(b->id);
     FREE_ITEM(b->units);
     FREE_ITEM(b->mesh_id);
@@ -389,6 +391,8 @@ int sdf_free_block(sdf_file_t *h, sdf_block_t *b)
     FREE_ITEM(b->checksum_type);
     FREE_ITEM(b->checksum);
     FREE_ITEM(b->must_read);
+    FREE_ITEM(b->station_id);
+    FREE_ITEM(b->station_index);
 
     FREE_ARRAY(b, station_ids);
     FREE_ARRAY(b, station_names);

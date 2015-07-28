@@ -575,6 +575,8 @@ static sdf_block_t *sdf_callback_grid_component(sdf_file_t *h, sdf_block_t *b)
         h->current_block = current_block;
     }
 
+    if (!h->mmap && b->data)
+        free(b->data);
     b->data = b->grids[0] = mesh->grids[b->nm];
     b->datatype_out = mesh->datatype_out;
     if (b->blocktype == SDF_BLOCKTYPE_POINT_DERIVED)
@@ -895,6 +897,16 @@ static sdf_block_t *sdf_callback_station_time(sdf_file_t *h, sdf_block_t *b)
 
     sz = SDF_TYPE_SIZES[b->datatype_out];
     if (!b->data) b->data = malloc(b->nelements_local * sz);
+
+    if (b->grids) {
+        for (i=0; i<b->ngrids; i++)
+            if (b->grids[i])
+                free(b->grids[i]);
+        free(b->grids);
+    }
+    b->ngrids = 1;
+    b->grids = calloc(b->ngrids, sizeof(float*));
+    b->grids[0] = b->data;
 
     // Find first station block
     block = h->blocklist;
