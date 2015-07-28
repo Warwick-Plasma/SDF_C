@@ -103,11 +103,6 @@ int sdf_read_blocklist_all(sdf_file_t *h)
                 b = sdf_find_block_by_id(h, preload[n]);
                 if (b && !b->data) {
                     h->current_block = b;
-                    if (!b->done_data && !b->dont_own_data) {
-                        if (b->data) free(b->data);
-                        b->data = calloc(b->nelements_local,
-                                SDF_TYPE_SIZES[b->datatype_out]);
-                    }
                     sdf_read_data(h);
                 }
                 free(preload[n]);
