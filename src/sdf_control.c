@@ -283,6 +283,9 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
  */
 int sdf_close(sdf_file_t *h)
 {
+    sdf_extension_free_data(h);
+    sdf_extension_unload();
+
     // No open file
     if (!h || !h->filehandle) return 1;
 
