@@ -325,7 +325,12 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
 
     if (b->grids) {
         if (!h->mmap && b->done_data && !b->dont_own_data)
-            for (i = 0; i < b->ngrids; i++) if (b->grids[i]) free(b->grids[i]);
+            for (i = 0; i < b->ngrids; i++)
+                if (b->grids[i]) {
+                    if (b->data == b->grids[i])
+                        b->data = NULL;
+                    free(b->grids[i]);
+                }
         free(b->grids);
         b->grids = NULL;
     }
