@@ -22,7 +22,7 @@
 
 #define SDF_VERSION  1
 #define SDF_REVISION 2
-#define SDF_LIB_VERSION  13
+#define SDF_LIB_VERSION  14
 #define SDF_LIB_REVISION 0
 
 #define SDF_MAGIC "SDF1"
