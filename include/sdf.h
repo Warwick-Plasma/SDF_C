@@ -314,11 +314,12 @@ struct sdf_block {
     char *mimetype, *checksum_type, *checksum, *mmap;
     int64_t mmap_len;
     char derived;
+
+    UT_hash_handle hh1, hh2;
+
 #ifdef PARALLEL
     MPI_Datatype mpitype, distribution, mpitype_out;
 #endif
-
-    UT_hash_handle hh1, hh2;
 };
 
 struct sdf_file {
