@@ -1,6 +1,10 @@
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DHASH_DEBUG)
 endif()
+set(VALGRIND OFF CACHE BOOL "Compile with valgrind support")
+if(VALGRIND)
+    add_definitions(-DVALGRIND)
+endif()
 
 set(SOURCES
    sdf_control.c sdf_derived.c sdf_extension_util.c sdf_helper.c

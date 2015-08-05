@@ -60,11 +60,13 @@ void sdf_extension_unload(void)
         sdf_extension_destroy(sdf_global_extension);
     }
 
+#ifndef VALGRIND
     dlclose(sdf_global_extension_dlhandle);
+    sdf_global_extension_dlhandle = NULL;
+#endif
 
     sdf_extension_destroy = NULL;
     sdf_global_extension = NULL;
-    sdf_global_extension_dlhandle = NULL;
     sdf_global_extension_failed = 0;
 
     return;
