@@ -60,12 +60,35 @@ void sdf_extension_unload(void)
         sdf_extension_destroy(sdf_global_extension);
     }
 
+#ifndef VALGRIND
     dlclose(sdf_global_extension_dlhandle);
+    sdf_global_extension_dlhandle = NULL;
+#endif
 
     sdf_extension_destroy = NULL;
     sdf_global_extension = NULL;
-    sdf_global_extension_dlhandle = NULL;
     sdf_global_extension_failed = 0;
+
+    return;
+}
+
+
+void sdf_extension_free_data(sdf_file_t *h)
+{
+    sdf_extension_free_t *sdf_extension_free;
+    void *p;
+
+    if (!sdf_global_extension_dlhandle) return;
+
+    if (sdf_global_extension) {
+        // Weird pointer copying required by ISO C
+        p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_free");
+        if ( !p )
+           return;
+        memcpy(&sdf_extension_free, &p, sizeof(p));
+
+        sdf_extension_free(h);
+    }
 
     return;
 }
@@ -103,11 +126,6 @@ int sdf_read_blocklist_all(sdf_file_t *h)
                 b = sdf_find_block_by_id(h, preload[n]);
                 if (b && !b->data) {
                     h->current_block = b;
-                    if (!b->done_data && !b->dont_own_data) {
-                        if (b->data) free(b->data);
-                        b->data = calloc(b->nelements_local,
-                                SDF_TYPE_SIZES[b->datatype_out]);
-                    }
                     sdf_read_data(h);
                 }
                 free(preload[n]);

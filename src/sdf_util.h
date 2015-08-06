@@ -151,6 +151,9 @@ extern "C" {
 
 sdf_block_t *sdf_find_block_by_id(sdf_file_t *h, const char *id);
 sdf_block_t *sdf_find_block_by_name(sdf_file_t *h, const char *name);
+void sdf_delete_hash_block(sdf_file_t *h, sdf_block_t *b);
+void sdf_hash_block(sdf_file_t *h, sdf_block_t *b);
+void sdf_hash_block_list(sdf_file_t *h);
 
 #ifdef __cplusplus
 }

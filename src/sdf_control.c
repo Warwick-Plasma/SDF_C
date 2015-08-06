@@ -241,6 +241,8 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
     h->filename = malloc(strlen(filename)+1);
     memcpy(h->filename, filename, strlen(filename)+1);
 
+    h->hashed_blocks_by_id = h->hashed_blocks_by_name = NULL;
+
     sdf_fopen(h, mode);
     if (!h->filehandle) {
         free(h->filename);
@@ -281,6 +283,9 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
  */
 int sdf_close(sdf_file_t *h)
 {
+    sdf_extension_free_data(h);
+    sdf_extension_unload();
+
     // No open file
     if (!h || !h->filehandle) return 1;
 
@@ -320,7 +325,12 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
 
     if (b->grids) {
         if (!h->mmap && b->done_data && !b->dont_own_data)
-            for (i = 0; i < b->ngrids; i++) if (b->grids[i]) free(b->grids[i]);
+            for (i = 0; i < b->ngrids; i++)
+                if (b->grids[i]) {
+                    if (b->data == b->grids[i])
+                        b->data = NULL;
+                    free(b->grids[i]);
+                }
         free(b->grids);
         b->grids = NULL;
     }
@@ -366,6 +376,8 @@ int sdf_free_block(sdf_file_t *h, sdf_block_t *b)
 {
     if (!b) return 1;
 
+    sdf_delete_hash_block(h, b);
+
     FREE_ITEM(b->id);
     FREE_ITEM(b->units);
     FREE_ITEM(b->mesh_id);
@@ -387,6 +399,8 @@ int sdf_free_block(sdf_file_t *h, sdf_block_t *b)
     FREE_ITEM(b->checksum_type);
     FREE_ITEM(b->checksum);
     FREE_ITEM(b->must_read);
+    FREE_ITEM(b->station_id);
+    FREE_ITEM(b->station_index);
 
     FREE_ARRAY(b, station_ids);
     FREE_ARRAY(b, station_names);
@@ -446,6 +460,8 @@ static int sdf_free_handle(sdf_file_t *h)
             b = next;
         }
     }
+    // Destroy extension data
+    if (h->ext_data) sdf_extension_free_data(h);
     // Destroy handle
     if (h->buffer) free(h->buffer);
     if (h->code_name) free(h->code_name);
