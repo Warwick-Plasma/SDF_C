@@ -6,6 +6,7 @@
 #include <sdf.h>
 #include "sdf_control.h"
 #include "sdf_util.h"
+#include "sdf_extension_util.h"
 #include "commit_info.h"
 
 #ifdef PARALLEL
