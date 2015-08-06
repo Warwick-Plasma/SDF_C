@@ -78,7 +78,8 @@ static void stack_free_data_or_grid(stack_handle_t *sh, sdf_block_t *b)
             sh->memory_size -=
                 b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
         }
-    }
+    } else if (b->grids)
+        free(b->grids);
     b->grids = NULL;
     b->data = NULL;
     b->done_data = 0;

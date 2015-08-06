@@ -14,13 +14,15 @@
 #include <stdio.h>
 #include <inttypes.h>
 
+#include "uthash.h"
+
 #ifdef PARALLEL
 #include <mpi.h>
 #endif
 
 #define SDF_VERSION  1
 #define SDF_REVISION 2
-#define SDF_LIB_VERSION  13
+#define SDF_LIB_VERSION  14
 #define SDF_LIB_REVISION 0
 
 #define SDF_MAGIC "SDF1"
@@ -312,6 +314,9 @@ struct sdf_block {
     char *mimetype, *checksum_type, *checksum, *mmap;
     int64_t mmap_len;
     char derived;
+
+    UT_hash_handle hh1, hh2;
+
 #ifdef PARALLEL
     MPI_Datatype mpitype, distribution, mpitype_out;
 #endif
@@ -354,6 +359,8 @@ struct sdf_file {
     FILE *filehandle;
 #endif
     comm_t comm;
+
+    sdf_block_t *hashed_blocks_by_id, *hashed_blocks_by_name;
 };
 
 struct run_info {
