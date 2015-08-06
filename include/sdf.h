@@ -274,7 +274,7 @@ struct sdf_block {
     double *extents, *dim_mults;
     double *station_x, *station_y, *station_z;
     double mult, time, time_increment;
-    int64_t dims[4], local_dims[4];
+    int64_t dims[SDF_MAXDIMS], local_dims[SDF_MAXDIMS];
     int64_t block_start, next_block_location, data_location;
     int64_t inline_block_start, inline_next_block_location;
     int64_t summary_block_start, summary_next_block_location;
