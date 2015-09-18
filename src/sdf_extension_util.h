@@ -17,6 +17,7 @@ extern "C" {
 #endif
 
 void sdf_extension_unload(void);
+void sdf_extension_free_data(sdf_file_t *h);
 
 #ifdef __cplusplus
 }
