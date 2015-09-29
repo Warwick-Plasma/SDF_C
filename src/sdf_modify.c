@@ -259,7 +259,6 @@ int sdf_modify_array_section(sdf_file_t *h, sdf_block_t *b, void *data,
     default:
         return errcode;
     }
-    if (!b->dims) return errcode;
 
     if (starts) {
         data_starts = starts;
