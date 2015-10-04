@@ -14,12 +14,12 @@
 
 #define SDF_COMMON_MESH_INFO() do { \
     if (!h->current_block || !h->current_block->done_header) { \
-      if (h->rank == h->rank_master) { \
-        fprintf(stderr, "*** ERROR ***\n"); \
-        fprintf(stderr, "SDF block header has not been read." \
-                " Ignoring call.\n"); \
-      } \
-      return 1; \
+        if (h->rank == h->rank_master) { \
+            fprintf(stderr, "*** ERROR ***\n"); \
+            fprintf(stderr, "SDF block header has not been read." \
+                    " Ignoring call.\n"); \
+        } \
+        return 1; \
     } \
     b = h->current_block; \
     if (b->done_info) return 0; \
@@ -176,7 +176,7 @@ static int sdf_plain_mesh_distribution(sdf_file_t *h)
     sdf_factor(h);
 
     MPI_Type_create_subarray(b->ndims, sizes, subsizes, b->starts,
-        MPI_ORDER_FORTRAN, b->mpitype, &b->distribution);
+            MPI_ORDER_FORTRAN, b->mpitype, &b->distribution);
     MPI_Type_commit(&b->distribution);
 
     b->nelements_local = 1;
@@ -245,7 +245,7 @@ static int sdf_helper_read_array_halo(sdf_file_t *h, void **var_in)
         subsizes[i] = 1;
 
     MPI_Type_create_subarray(b->ndims, sizes, subsizes, b->starts,
-        MPI_ORDER_FORTRAN, b->mpitype, &distribution);
+            MPI_ORDER_FORTRAN, b->mpitype, &distribution);
 
     MPI_Type_commit(&distribution);
 
@@ -271,19 +271,19 @@ static int sdf_helper_read_array_halo(sdf_file_t *h, void **var_in)
         b->starts[i] = 0;
 
         MPI_Type_create_subarray(b->ndims, sizes, face, b->starts,
-            MPI_ORDER_FORTRAN, b->mpitype, &facetype);
+                MPI_ORDER_FORTRAN, b->mpitype, &facetype);
         MPI_Type_commit(&facetype);
 
         p1 = (char*)b->data + b->ng * offset;
         p2 = (char*)b->data + (sizes[i] - b->ng) * offset;
         MPI_Sendrecv(p1, 1, facetype, b->proc_min[i], tag, p2, 1, facetype,
-            b->proc_max[i], tag, h->comm, MPI_STATUS_IGNORE);
+                b->proc_max[i], tag, h->comm, MPI_STATUS_IGNORE);
         tag++;
 
         p1 = (char*)b->data + (sizes[i] - 2 * b->ng) * offset;
         p2 = b->data;
         MPI_Sendrecv(p1, 1, facetype, b->proc_max[i], tag, p2, 1, facetype,
-            b->proc_min[i], tag, h->comm, MPI_STATUS_IGNORE);
+                b->proc_min[i], tag, h->comm, MPI_STATUS_IGNORE);
         tag++;
 
         MPI_Type_free(&facetype);

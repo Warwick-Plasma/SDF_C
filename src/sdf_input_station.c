@@ -14,12 +14,12 @@
 
 #define SDF_COMMON_MESH_INFO() do { \
     if (!h->current_block || !h->current_block->done_header) { \
-      if (h->rank == h->rank_master) { \
-        fprintf(stderr, "*** ERROR ***\n"); \
-        fprintf(stderr, "SDF block header has not been read." \
-                " Ignoring call.\n"); \
-      } \
-      return 1; \
+        if (h->rank == h->rank_master) { \
+            fprintf(stderr, "*** ERROR ***\n"); \
+            fprintf(stderr, "SDF block header has not been read." \
+                    " Ignoring call.\n"); \
+        } \
+        return 1; \
     } \
     b = h->current_block; \
     if (b->done_info) return 0; \
@@ -94,192 +94,193 @@ int sdf_read_station_info(sdf_file_t *h)
 
 
 int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
-      char **var_names, int nvars, double t0, double t1, char **timehis,
-      int *size, int *offset, int *nrows, int *row_size)
+        char **var_names, int nvars, double t0, double t1, char **timehis,
+        int *size, int *offset, int *nrows, int *row_size)
 {
-   /* Read station time histories for specified stations and variables
-    * from a single station block.
-    * Unknown variables are ignored.
-    * The list of specified stations must be in ascending numerical
-    * order and all valid
-    */
+    /* Read station time histories for specified stations and variables
+     * from a single station block.
+     * Unknown variables are ignored.
+     * The list of specified stations must be in ascending numerical
+     * order and all valid
+     */
 
-   sdf_block_t *b = h->current_block;
-   char *data, *t_raw, *trow, *v;
-   int i, j, s, ii, jj, ss;
-   long buff_size, pos, start_pos, end_pos, start, end, mid;
-   double t;
+    sdf_block_t *b = h->current_block;
+    char *data, *t_raw, *trow, *v;
+    int i, j, s, ii, jj, ss;
+    long buff_size, pos, start_pos, end_pos, start, end, mid;
+    double t;
 #ifndef PARALLEL
-   size_t mlen, mstart, moff;
+    size_t mlen, mstart, moff;
 #endif
 
-   if (!b->done_info) sdf_read_station_info(h);
+    if (!b->done_info) sdf_read_station_info(h);
 
-   /* Record 'Time' as the first variable.
-    * Sanity check first. */
-   if ( strcmp(b->variable_ids[0], "time") ) {
-      fprintf(stderr, "SDF C Library, internal error: "
-            "First variable in a station block is not 'time'.\n");
-      return 1;
-   }
-   /* Check validity of station numbers */
-   for ( i=0; i<nstat; i++ ) {
-      if ( stat[i]<0 || stat[i]>=b->nstations ) {
-         fprintf(stderr, "SDF C Library, function sdf_read_station_timehis, "
-               "internal error: Requested station number lies "
-               "outside valid range.\n");
-         return 1;
-      }
-      if ( i>0 && stat[i-1]>=stat[i] ) {
-         fprintf(stderr, "SDF C Library, function sdf_read_station_timehis, "
-               "internal error: Requested list of stations is not "
-               "a strictly increasing list.\n");
-         return 1;
-      }
-   }
+    /* Record 'Time' as the first variable.
+     * Sanity check first. */
+    if ( strcmp(b->variable_ids[0], "time") ) {
+        fprintf(stderr, "SDF C Library, internal error: "
+                "First variable in a station block is not 'time'.\n");
+        return 1;
+    }
+    /* Check validity of station numbers */
+    for ( i=0; i<nstat; i++ ) {
+        if ( stat[i]<0 || stat[i]>=b->nstations ) {
+            fprintf(stderr, "SDF C Library, function sdf_read_station_timehis, "
+                    "internal error: Requested station number lies "
+                    "outside valid range.\n");
+            return 1;
+        }
+        if ( i>0 && stat[i-1]>=stat[i] ) {
+            fprintf(stderr, "SDF C Library, function sdf_read_station_timehis, "
+                    "internal error: Requested list of stations is not "
+                    "a strictly increasing list.\n");
+            return 1;
+        }
+    }
 
-   offset[0] = 0;
-   size[0] = SDF_TYPE_SIZES[b->variable_types[0]];
+    offset[0] = 0;
+    size[0] = SDF_TYPE_SIZES[b->variable_types[0]];
 
-   buff_size = SDF_TYPE_SIZES[b->variable_types[0]];
-   *row_size = SDF_TYPE_SIZES[b->variable_types[0]];
-   ss = 0;
-   ii = 1;
-   jj = 1;
-   for (s=0; s<b->nstations; s++) {
-      for ( i=0; i<b->station_nvars[s]; i++ ) {
-         if ( s==stat[ss] ) {
-            for ( j=0; j<nvars; j++ )
-               if ( !strcmp(b->material_names[ii+i], var_names[j])
-                     || !strcmp(b->variable_ids[ii+i], var_names[j]) ) {
-                  offset[jj+j] = buff_size;
-                  size[jj+j] = SDF_TYPE_SIZES[b->variable_types[ii+i]];
-                  *row_size += SDF_TYPE_SIZES[b->variable_types[ii+i]];
-               }
-         }
-         buff_size += SDF_TYPE_SIZES[b->variable_types[ii+i]];
-      }
-      if ( s==stat[ss] ) {
-         ss++;
-         jj += nvars;
-      }
-      ii += i;
-   }
+    buff_size = SDF_TYPE_SIZES[b->variable_types[0]];
+    *row_size = SDF_TYPE_SIZES[b->variable_types[0]];
+    ss = 0;
+    ii = 1;
+    jj = 1;
+    for (s=0; s<b->nstations; s++) {
+        for ( i=0; i<b->station_nvars[s]; i++ ) {
+            if ( s==stat[ss] ) {
+                for ( j=0; j<nvars; j++ ) {
+                    if ( !strcmp(b->material_names[ii+i], var_names[j])
+                            || !strcmp(b->variable_ids[ii+i], var_names[j]) ) {
+                        offset[jj+j] = buff_size;
+                        size[jj+j] = SDF_TYPE_SIZES[b->variable_types[ii+i]];
+                        *row_size += SDF_TYPE_SIZES[b->variable_types[ii+i]];
+                    }
+                }
+            }
+            buff_size += SDF_TYPE_SIZES[b->variable_types[ii+i]];
+        }
+        if ( s==stat[ss] ) {
+            ss++;
+            jj += nvars;
+        }
+        ii += i;
+    }
 
 #ifndef PARALLEL
-   if (h->mmap) {
-      mlen = sysconf(_SC_PAGESIZE);
-      mstart = mlen * (b->data_location / mlen);
-      moff = b->data_location - mstart;
-      b->mmap_len = mlen = b->data_length + moff;
-      b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
-      data = moff + b->mmap;
-   } else
+    if (h->mmap) {
+        mlen = sysconf(_SC_PAGESIZE);
+        mstart = mlen * (b->data_location / mlen);
+        moff = b->data_location - mstart;
+        b->mmap_len = mlen = b->data_length + moff;
+        b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
+        data = moff + b->mmap;
+    } else
 #endif
-      t_raw = malloc(SDF_TYPE_SIZES[b->variable_types[i]]);
+        t_raw = malloc(SDF_TYPE_SIZES[b->variable_types[i]]);
 
-   /* Find the start and end time steps
-    * Bisect until t[start] <= t0 < t[start+1]
-    */
-   start = 0;
-   end = b->nelements;
-   for ( ; start+1<end; ) {
-      /* mid = (start + end)/2 can overflow
-       * See http://googleresearch.blogspot.co.uk/2006/06/extra-extra-read-all-about-it-nearly.html
-       */
-      mid = ((unsigned int)start + (unsigned int)end) >> 1;
-      if (h->mmap)
-         t_raw = data + mid * buff_size;
-      else {
-         sdf_seek_set(h, b->data_location + mid * buff_size);
-         sdf_read_bytes(h, t_raw, SDF_TYPE_SIZES[b->variable_types[0]]);
-      }
-      switch(b->variable_types[0]) {
-         case SDF_DATATYPE_REAL4:
+    /* Find the start and end time steps
+     * Bisect until t[start] <= t0 < t[start+1]
+     */
+    start = 0;
+    end = b->nelements;
+    for ( ; start+1<end; ) {
+        /* mid = (start + end)/2 can overflow
+         * See http://googleresearch.blogspot.co.uk/2006/06/extra-extra-read-all-about-it-nearly.html
+         */
+        mid = ((unsigned int)start + (unsigned int)end) >> 1;
+        if (h->mmap)
+            t_raw = data + mid * buff_size;
+        else {
+            sdf_seek_set(h, b->data_location + mid * buff_size);
+            sdf_read_bytes(h, t_raw, SDF_TYPE_SIZES[b->variable_types[0]]);
+        }
+        switch(b->variable_types[0]) {
+        case SDF_DATATYPE_REAL4:
             t = (double)(*(float *)t_raw);
             break;
-         case SDF_DATATYPE_REAL8:
+        case SDF_DATATYPE_REAL8:
             t = *((double *)t_raw);
             break;
-      }
-      if (t<=t0)
-         start = mid;
-      else
-         end = mid;
-   }
-   start_pos = start;
+        }
+        if (t<=t0)
+            start = mid;
+        else
+            end = mid;
+    }
+    start_pos = start;
 
-   start = 0;
-   end = b->nelements;
-   for ( ; start+1<end; ) {
-      /* mid = (start + end)/2 can overflow
-       * See http://googleresearch.blogspot.co.uk/2006/06/extra-extra-read-all-about-it-nearly.html
-       */
-      mid = ((unsigned int)start + (unsigned int)end) >> 1;
-      if (h->mmap)
-         t_raw = data + mid * buff_size;
-      else {
-         sdf_seek_set(h, b->data_location + mid * buff_size);
-         sdf_read_bytes(h, t_raw, SDF_TYPE_SIZES[b->variable_types[0]]);
-      }
-      switch(b->variable_types[0]) {
-         case SDF_DATATYPE_REAL4:
+    start = 0;
+    end = b->nelements;
+    for ( ; start+1<end; ) {
+        /* mid = (start + end)/2 can overflow
+         * See http://googleresearch.blogspot.co.uk/2006/06/extra-extra-read-all-about-it-nearly.html
+         */
+        mid = ((unsigned int)start + (unsigned int)end) >> 1;
+        if (h->mmap)
+            t_raw = data + mid * buff_size;
+        else {
+            sdf_seek_set(h, b->data_location + mid * buff_size);
+            sdf_read_bytes(h, t_raw, SDF_TYPE_SIZES[b->variable_types[0]]);
+        }
+        switch(b->variable_types[0]) {
+        case SDF_DATATYPE_REAL4:
             t = (double)(*(float *)t_raw);
             break;
-         case SDF_DATATYPE_REAL8:
+        case SDF_DATATYPE_REAL8:
             t = *((double *)t_raw);
             break;
-      }
-      if (t<=t1)
-         start = mid;
-      else
-         end = mid;
-   }
-   end_pos = start;
+        }
+        if (t<=t1)
+            start = mid;
+        else
+            end = mid;
+    }
+    end_pos = start;
 
-   *nrows = end_pos - start_pos + 1;
-   if ( *nrows<=0 ) {
-      if ( !h->mmap )
-         free(t_raw);
-      return 1;
-   }
+    *nrows = end_pos - start_pos + 1;
+    if ( *nrows<=0 ) {
+        if ( !h->mmap )
+            free(t_raw);
+        return 1;
+    }
 
-   *timehis = (char *)malloc(*nrows * *row_size);
-   if ( h->mmap )
-      data = data + start_pos * buff_size;
-   else
-      data = malloc(buff_size);
+    *timehis = (char *)malloc(*nrows * *row_size);
+    if ( h->mmap )
+        data = data + start_pos * buff_size;
+    else
+        data = malloc(buff_size);
 
-   trow = *timehis;
-   for ( pos=start_pos; pos<=end_pos ; pos++ ) {
-      if ( !h->mmap ) {
-         sdf_seek_set(h, b->data_location + pos*buff_size);
-         sdf_read_bytes(h, data, buff_size);
-      }
-      v = trow;
-      for (i=0; i<nstat*nvars+1; i++) {
-         memcpy(v, data + offset[i], size[i]);
-         if ( i<nstat*nvars )
-            v += (end_pos - pos + 1) * size[i]
-               + (pos - start_pos) * size[i+1];
-      }
-      trow += size[0];
-      if ( h->mmap )
-         data += buff_size;
-   }
+    trow = *timehis;
+    for ( pos=start_pos; pos<=end_pos ; pos++ ) {
+        if ( !h->mmap ) {
+            sdf_seek_set(h, b->data_location + pos*buff_size);
+            sdf_read_bytes(h, data, buff_size);
+        }
+        v = trow;
+        for (i=0; i<nstat*nvars+1; i++) {
+            memcpy(v, data + offset[i], size[i]);
+            if ( i<nstat*nvars )
+                v += (end_pos - pos + 1) * size[i]
+                        + (pos - start_pos) * size[i+1];
+        }
+        trow += size[0];
+        if ( h->mmap )
+            data += buff_size;
+    }
 
-   sdf_seek_set(h, b->data_location);
-   h->current_location = b->data_location;
+    sdf_seek_set(h, b->data_location);
+    h->current_location = b->data_location;
 
-   if ( !h->mmap )
-      free(data);
+    if ( !h->mmap )
+        free(data);
 
-   /* Now redefine offset to point to the columns within timhis
-    * rather than the raw data block
-    */
-   offset[0] = 0;
-   for ( i=1; i<=nstat*nvars; i++ )
-      offset[i] = offset[i-1] + size[i-1];
+    /* Now redefine offset to point to the columns within timhis
+     * rather than the raw data block
+     */
+    offset[0] = 0;
+    for ( i=1; i<=nstat*nvars; i++ )
+        offset[i] = offset[i-1] + size[i-1];
 
-   return 0;
+    return 0;
 }
