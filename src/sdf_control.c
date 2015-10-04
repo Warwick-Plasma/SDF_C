@@ -889,7 +889,7 @@ static int sdf_header_copy(const sdf_file_t *h_in, sdf_file_t *h_out)
 static uint32_t Q[41790], indx, carry, xcng, xs;
 
 #define CNG (xcng = 69609 * xcng + 123)
-#define XS (xs ^= xs<<13, xs ^= (unsigned)xs>>17, xs ^= xs>>5 )
+#define XS (xs ^= xs<<13, xs ^= (unsigned)xs>>17, xs ^= xs>>5)
 #define SUPR (indx < 41790 ? Q[indx++] : refill())
 #define KISS SUPR + CNG + XS
 
@@ -897,7 +897,7 @@ static uint32_t refill(void)
 {
     int i;
     uint64_t t;
-    for (i=0; i<41790; i++) {
+    for (i=0; i < 41790; i++) {
         t = 7010176ULL * Q[i] + carry;
         carry = (t>>32);
         Q[i] = (uint32_t)~(t);
@@ -922,8 +922,8 @@ static void sdf_random_init(void)
     carry = 362436;
     xcng = 1236789;
     xs = 521288629;
-    for (i=0; i<41790; i++) Q[i] = CNG + XS;
-    for (i=0; i<41790; i++) sdf_random();
+    for (i=0; i < 41790; i++) Q[i] = CNG + XS;
+    for (i=0; i < 41790; i++) sdf_random();
 }
 
 

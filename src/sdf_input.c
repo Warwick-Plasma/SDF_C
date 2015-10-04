@@ -57,7 +57,7 @@ void sdf_trim(char *str)
     int i, len = strlen(str);
     char *ptr = str + len - 1;
 
-    for (i=0, ptr=str+len-1; i<len && *ptr==' '; i++, ptr--)
+    for (i=0, ptr=str+len-1; i < len && *ptr == ' '; i++, ptr--)
         *ptr = '\0';
 }
 
@@ -249,7 +249,7 @@ int sdf_purge_duplicates(sdf_file_t *h)
         next = b->next;
 
         subnext = sdf_find_block_by_id(h, b->id);
-        if ( !subnext || subnext == b )
+        if (!subnext || subnext == b)
             continue;
 
         sdf_delete_hash_block(h, b);
@@ -258,7 +258,7 @@ int sdf_purge_duplicates(sdf_file_t *h)
             sdf_modify_remove_block(h, b);
         } else {
             pos = strlen(b->id);
-            if ( pos == h->id_length )
+            if (pos == h->id_length)
                 pos--;
 
             // Mangle ID by appending an integer. Allow for up to 99
@@ -271,11 +271,11 @@ int sdf_purge_duplicates(sdf_file_t *h)
 
                 // Check that the new ID is unique
                 subnext = sdf_find_block_by_id(h, b->id);
-                if ( !subnext )
+                if (!subnext)
                     break;
             }
 
-            if ( subnext )
+            if (subnext)
                 // Discard block if we can't find a unique ID
                 sdf_modify_remove_block(h, b);
             else
@@ -1081,7 +1081,7 @@ static int sdf_read_array(sdf_file_t *h)
         h->indent = 0;
         SDF_DPRNT("\n");
         SDF_DPRNT("b->name: %s ", b->name);
-        for (n=0; n<b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->local_dims[n]);
+        for (n=0; n < b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->local_dims[n]);
         SDF_DPRNT("\n  ");
         if (b->datatype_out == SDF_DATATYPE_CHARACTER) {
             p = b->data;

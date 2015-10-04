@@ -37,11 +37,11 @@ void sdf_delete_hash_block(sdf_file_t *h, sdf_block_t *b)
     sdf_block_t *bb = NULL;
 
     HASH_FIND(hh1, h->hashed_blocks_by_id, b->id, strlen(b->id), bb);
-    if ( bb != NULL && b == bb )
+    if (bb != NULL && b == bb)
         HASH_DELETE(hh1, h->hashed_blocks_by_id, b);
 
     HASH_FIND(hh2, h->hashed_blocks_by_name, b->name, strlen(b->name), bb);
-    if ( bb != NULL && b == bb )
+    if (bb != NULL && b == bb)
         HASH_DELETE(hh2, h->hashed_blocks_by_name, b);
 }
 
@@ -51,20 +51,21 @@ void sdf_hash_block(sdf_file_t *h, sdf_block_t *b)
     sdf_block_t *bb = NULL;
 
     HASH_FIND(hh1, h->hashed_blocks_by_id, b->id, strlen(b->id), bb);
-    if ( bb != NULL && b != bb ) {
+    if (bb != NULL && b != bb) {
         HASH_DELETE(hh1, h->hashed_blocks_by_id, bb);
         bb = NULL;
     }
-    if ( !bb )
+    if (!bb)
         HASH_ADD_KEYPTR(hh1, h->hashed_blocks_by_id, b->id, strlen(b->id), b);
 
     HASH_FIND(hh2, h->hashed_blocks_by_name, b->name, strlen(b->name), bb);
-    if ( bb != NULL && b != bb ) {
+    if (bb != NULL && b != bb) {
         HASH_DELETE(hh2, h->hashed_blocks_by_name, bb);
         bb = NULL;
     }
-    if ( !bb )
-        HASH_ADD_KEYPTR(hh2, h->hashed_blocks_by_name, b->name, strlen(b->name), b);
+    if (!bb)
+        HASH_ADD_KEYPTR(hh2, h->hashed_blocks_by_name, b->name,
+                strlen(b->name), b);
 }
 
 
@@ -73,7 +74,7 @@ void sdf_hash_block_list(sdf_file_t *h)
     sdf_block_t *b;
 
     b = h->blocklist;
-    while ( b ) {
+    while (b) {
         sdf_hash_block(h, b);
         b = b->next;
     }

@@ -83,7 +83,7 @@ void sdf_extension_free_data(sdf_file_t *h)
     if (sdf_global_extension) {
         // Weird pointer copying required by ISO C
         p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_free");
-        if ( !p )
+        if (!p)
             return;
         memcpy(&sdf_extension_free, &p, sizeof(p));
 

@@ -899,7 +899,7 @@ static sdf_block_t *sdf_callback_station_time(sdf_file_t *h, sdf_block_t *b)
     if (!b->data) b->data = malloc(b->nelements_local * sz);
 
     if (b->grids) {
-        for (i=0; i<b->ngrids; i++)
+        for (i=0; i < b->ngrids; i++)
             if (b->grids[i])
                 free(b->grids[i]);
         free(b->grids);
@@ -1702,12 +1702,12 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             SDF_SET_ENTRY_ID(append->units, "CPU");
             append->ndims = b->ndims;
             append->nelements_local = 1;
-            for (i=0; i<b->ndims; i++) {
+            for (i=0; i < b->ndims; i++) {
                 append->dims[i] = b->dims[i] + 1;
                 append->local_dims[i] = append->dims[i];
                 append->nelements_local *= append->local_dims[i];
             }
-            for (i=b->ndims; i<3; i++)
+            for (i=b->ndims; i < 3; i++)
                 append->local_dims[i] = append->dims[i] = 1;
             append->n_ids = 1;
             append->variable_ids = calloc(append->n_ids, sizeof(char*));

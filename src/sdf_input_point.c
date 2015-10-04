@@ -214,7 +214,8 @@ int sdf_read_point_mesh(sdf_file_t *h)
         h->indent = 0;
         SDF_DPRNT("\n");
         SDF_DPRNT("b->name: %s ", b->name);
-        for (n=0; n<b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->nelements_local);
+        for (n=0; n < b->ndims; n++)
+            SDF_DPRNT("%" PRIi64 " ",b->nelements_local);
         SDF_DPRNT("\n");
         h->indent = 2;
     }
@@ -307,7 +308,8 @@ int sdf_read_point_variable(sdf_file_t *h)
         h->indent = 0;
         SDF_DPRNT("\n");
         SDF_DPRNT("b->name: %s ", b->name);
-        for (n=0; n<b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->nelements_local);
+        for (n=0; n < b->ndims; n++)
+            SDF_DPRNT("%" PRIi64 " ",b->nelements_local);
         SDF_DPRNT("\n  ");
         SDF_DPRNTar(b->data, b->nelements_local);
     }
