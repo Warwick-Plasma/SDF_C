@@ -321,6 +321,7 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
 {
     int i;
     struct run_info *run;
+    char **var;
 
     if (!b) return 1;
 
@@ -347,6 +348,9 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
             free(b->data);
             b->data = NULL;
         } else if (b->blocktype == SDF_BLOCKTYPE_NAMEVALUE) {
+            var = b->data;
+            for (i=0; i < b->ndims; i++)
+                free(var[i]);
             free(b->data);
             b->data = NULL;
         }
@@ -404,6 +408,8 @@ int sdf_free_block(sdf_file_t *h, sdf_block_t *b)
     FREE_ITEM(b->must_read);
     FREE_ITEM(b->station_id);
     FREE_ITEM(b->station_index);
+    FREE_ITEM(b->obstacle_id);
+    FREE_ITEM(b->vfm_id);
 
     FREE_ARRAY(b, station_ids);
     FREE_ARRAY(b, station_names);
