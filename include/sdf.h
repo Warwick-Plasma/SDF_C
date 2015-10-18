@@ -5,7 +5,7 @@
    @details Routines for reading and writing SDF files.
    @author Dr Keith Bennett
    @date 15/02/2014
-   @version 14.0
+   @version 14.1
 */
 
 #ifndef _SDF_COMMON_H_
@@ -21,9 +21,9 @@
 #endif
 
 #define SDF_VERSION  1
-#define SDF_REVISION 2
+#define SDF_REVISION 4
 #define SDF_LIB_VERSION  14
-#define SDF_LIB_REVISION 0
+#define SDF_LIB_REVISION 1
 
 #define SDF_MAGIC "SDF1"
 
