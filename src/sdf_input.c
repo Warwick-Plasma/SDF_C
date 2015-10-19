@@ -182,6 +182,8 @@ int sdf_read_header(sdf_file_t *h)
 
     SDF_READ_ENTRY_LOGICAL(h->other_domains);
 
+    SDF_READ_ENTRY_LOGICAL(h->station_file);
+
     free(h->buffer);
     h->buffer = NULL;
 

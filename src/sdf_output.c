@@ -223,7 +223,7 @@ static int write_header(sdf_file_t *h)
 {
     int32_t int4;
     int errcode;
-    char padding[6];
+    char padding[5];
 
     errcode = 0;
 
@@ -286,8 +286,10 @@ static int write_header(sdf_file_t *h)
 
         errcode += sdf_write_bytes(h, &h->other_domains, 1);
 
-        memset(padding, 0, 6);
-        errcode += sdf_write_bytes(h, padding, 6);
+        errcode += sdf_write_bytes(h, &h->station_file, 1);
+
+        memset(padding, 0, 5);
+        errcode += sdf_write_bytes(h, padding, 5);
     }
 
     h->current_location = h->first_block_location;
@@ -1124,7 +1126,8 @@ int64_t sdf_write_new_summary(sdf_file_t *h)
 
 
 static int sdf_write_header(sdf_file_t *h, char *code_name, int code_io_version,
-        int step, double time, char restart, int jobid1, int jobid2)
+        int step, double time, char restart, char station_file, int jobid1,
+        int jobid2)
 {
     int errcode = 0;
 
@@ -1136,6 +1139,7 @@ static int sdf_write_header(sdf_file_t *h, char *code_name, int code_io_version,
     h->restart_flag = restart;
     h->jobid1 = jobid1;
     h->jobid2 = jobid2;
+    h->station_file = station_file;
 
     return write_header(h);
 }
