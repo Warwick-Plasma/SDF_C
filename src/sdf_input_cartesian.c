@@ -325,7 +325,7 @@ static int sdf_helper_read_array_halo(sdf_file_t *h, void **var_in)
         convert = 0;
 
     if (convert) {
-        int i;
+        size_t i;
         float *r4;
         double *old_var, *r8;
         r8 = old_var = (double*)read_var;
@@ -501,7 +501,7 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     if (h->swap) {
         if (b->datatype == SDF_DATATYPE_INTEGER4
                 || b->datatype == SDF_DATATYPE_REAL4) {
-            int i;
+            size_t i;
             int32_t *v = (int32_t*)*var_ptr;
             for (i=0; i < count; i++) {
                 _SDF_BYTE_SWAP32(*v);
@@ -509,7 +509,7 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
             }
         } else if (b->datatype == SDF_DATATYPE_INTEGER8
                 || b->datatype == SDF_DATATYPE_REAL8) {
-            int i;
+            size_t i;
             int64_t *v = (int64_t*)*var_ptr;
             for (i=0; i < count; i++) {
                 _SDF_BYTE_SWAP64(*v);
@@ -519,7 +519,7 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     }
 
     if (convert) {
-        int i;
+        size_t i;
         float *r4;
         double *old_var, *r8;
         r8 = old_var = (double*)read_var;
