@@ -70,7 +70,7 @@ void sdf_hash_block(sdf_file_t *h, sdf_block_t *b)
 
 void sdf_hash_block_list(sdf_file_t *h)
 {
-   sdf_block_t *b, *bb;
+   sdf_block_t *b;
 
    b = h->blocklist;
    while ( b ) {
