@@ -1,1 +1,1 @@
-../uthash/src/uthash.h
+../src/uthash/include/uthash.h
