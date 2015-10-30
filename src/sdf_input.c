@@ -547,9 +547,9 @@ static int sdf_read_next_block_header(sdf_file_t *h)
 // one contiguous buffer (h->buffer).
 static void build_summary_buffer(sdf_file_t *h)
 {
-    int i, buflen;
+    int count, buflen;
     int64_t data_location, block_location, next_block_location;
-    int32_t info_length;
+    int32_t info_length, nblocks;
     char *bufptr;
     char skip_summary;
 
@@ -567,7 +567,7 @@ static void build_summary_buffer(sdf_file_t *h)
 
         blockbuf_head = blockbuf = calloc(1,sizeof(*blockbuf));
         buflen = 0;
-        h->nblocks = 0;
+        nblocks = 0;
         skip_summary = (h->summary_location &&
                 h->summary_location != h->first_block_location);
         // Read the block metadata into a temporary linked list structure
@@ -580,8 +580,8 @@ static void build_summary_buffer(sdf_file_t *h)
             // Read the fixed length block header
             blockbuf->len = h->block_header_length;
             blockbuf->buffer = malloc(blockbuf->len);
-            i = sdf_read_bytes(h, blockbuf->buffer, blockbuf->len);
-            if (i != 0) break;
+            count = sdf_read_bytes(h, blockbuf->buffer, blockbuf->len);
+            if (count != 0) break;
 
             memcpy(&next_block_location, blockbuf->buffer,
                    sizeof(next_block_location));
@@ -617,18 +617,19 @@ static void build_summary_buffer(sdf_file_t *h)
 
                 blockbuf->len = info_length;
                 blockbuf->buffer = malloc(blockbuf->len);
-                i = sdf_read_bytes(h, blockbuf->buffer, blockbuf->len);
-                if (i != 0) break;
+                count = sdf_read_bytes(h, blockbuf->buffer, blockbuf->len);
+                if (count != 0) break;
             }
 
             buflen += h->block_header_length + info_length;
 
-            h->nblocks++;
+            nblocks++;
 
             blockbuf->next = calloc(1,sizeof(*blockbuf));
             blockbuf = blockbuf->next;
 
             if (h->current_location > next_block_location) break;
+            if (nblocks >= h->nblocks) break;
 
             h->current_location = block_location = next_block_location;
         }
