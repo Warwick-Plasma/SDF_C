@@ -629,10 +629,12 @@ static void build_summary_buffer(sdf_file_t *h)
             blockbuf = blockbuf->next;
 
             if (h->current_location > next_block_location) break;
-            if (nblocks >= h->nblocks) break;
+            if (h->ignore_nblocks == 0 && nblocks >= h->nblocks) break;
 
             h->current_location = block_location = next_block_location;
         }
+
+        if (h->ignore_nblocks != 0) h->nblocks = nblocks;
 
         if (blockbuf->buffer) {
             free(blockbuf->buffer);

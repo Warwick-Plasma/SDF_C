@@ -353,6 +353,7 @@ struct sdf_file {
     int array_count, fd, purge_duplicated_ids;
     /* Flag to add internal ghost cells for the VisIt reader */
     int internal_ghost_cells;
+    int ignore_nblocks;
 #ifdef PARALLEL
     MPI_File filehandle;
 #else
