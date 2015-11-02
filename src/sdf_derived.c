@@ -738,8 +738,8 @@ static sdf_block_t *sdf_callback_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
                 free(x);
             else
 #endif
-            b->grids[n] = x;
-            b->nelements_local *= nx;
+                b->grids[n] = x;
+                b->nelements_local *= nx;
         }
         for (n=b->ndims; n < 3; n++) {
             b->local_dims[n] = 1;
@@ -899,7 +899,7 @@ static sdf_block_t *sdf_callback_station_time(sdf_file_t *h, sdf_block_t *b)
     if (!b->data) b->data = malloc(b->nelements_local * sz);
 
     if (b->grids) {
-        for (i=0; i<b->ngrids; i++)
+        for (i=0; i < b->ngrids; i++)
             if (b->grids[i])
                 free(b->grids[i]);
         free(b->grids);
@@ -1052,10 +1052,10 @@ static void add_surface_variables(sdf_file_t *h, sdf_block_t *surf,
         b = next;
         next = b->next;
 
-        if ((b->blocktype != SDF_BLOCKTYPE_PLAIN_VARIABLE &&
-                b->blocktype != SDF_BLOCKTYPE_PLAIN_DERIVED) ||
-                b->dont_display || b->stagger != SDF_STAGGER_CELL_CENTRE)
-                    continue;
+        if ((b->blocktype != SDF_BLOCKTYPE_PLAIN_VARIABLE
+                && b->blocktype != SDF_BLOCKTYPE_PLAIN_DERIVED)
+                || b->dont_display || b->stagger != SDF_STAGGER_CELL_CENTRE)
+            continue;
 
         APPEND_BLOCK(append);
         nappend++;
@@ -1459,13 +1459,13 @@ static void add_global_station(sdf_file_t *h, sdf_block_t **append,
                 new->nmaterial_names = new->nvariables;
 
         new->variable_ids =
-            calloc(new->nvariables, sizeof(*new->variable_ids));
+                calloc(new->nvariables, sizeof(*new->variable_ids));
         new->dim_units =
-            calloc(new->nvariables, sizeof(*new->dim_units));
+                calloc(new->nvariables, sizeof(*new->dim_units));
         new->material_names =
-            calloc(new->nvariables, sizeof(*new->material_names));
+                calloc(new->nvariables, sizeof(*new->material_names));
         new->variable_types =
-            calloc(new->nvariables, sizeof(*new->variable_types));
+                calloc(new->nvariables, sizeof(*new->variable_types));
         if (new->use_mult)
             new->dim_mults = calloc(new->nvariables, sizeof(*new->dim_mults));
 
@@ -1477,7 +1477,7 @@ static void add_global_station(sdf_file_t *h, sdf_block_t **append,
             SDF_SET_ENTRY_ID(new->variable_ids[nidx], b->variable_ids[i]);
             SDF_SET_ENTRY_ID(new->dim_units[nidx], b->dim_units[i]);
             SDF_SET_ENTRY_STRING(new->material_names[nidx],
-                b->material_names[i]);
+                    b->material_names[i]);
             new->variable_types[nidx] = b->variable_types[i];
             if (new->use_mult)
                 new->dim_mults[nidx] = b->dim_mults[i];
@@ -1544,7 +1544,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
         next = b->next;
 
         if (b->blocktype == SDF_BLOCKTYPE_POINT_MESH
-            || b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH) {
+                || b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH) {
             if (!first_mesh && b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH)
                 first_mesh = b;
 
@@ -1657,9 +1657,9 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             append->dim_units = calloc(nd, sizeof(char*));
             for (n = 0; n < nd; n++) {
                 SDF_SET_ENTRY_STRING(append->dim_labels[n],
-                    mesh->dim_labels[n]);
+                        mesh->dim_labels[n]);
                 SDF_SET_ENTRY_STRING(append->dim_units[n],
-                    mesh->dim_units[n]);
+                        mesh->dim_units[n]);
             }
             mesh = append;
 
@@ -1702,12 +1702,12 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             SDF_SET_ENTRY_ID(append->units, "CPU");
             append->ndims = b->ndims;
             append->nelements_local = 1;
-            for (i=0; i<b->ndims; i++) {
+            for (i=0; i < b->ndims; i++) {
                 append->dims[i] = b->dims[i] + 1;
                 append->local_dims[i] = append->dims[i];
                 append->nelements_local *= append->local_dims[i];
             }
-            for (i=b->ndims; i<3; i++)
+            for (i=b->ndims; i < 3; i++)
                 append->local_dims[i] = append->dims[i] = 1;
             append->n_ids = 1;
             append->variable_ids = calloc(append->n_ids, sizeof(char*));
@@ -1746,9 +1746,9 @@ int sdf_add_derived_blocks(sdf_file_t *h)
         append->dim_units = calloc(nd, sizeof(char*));
         for (n = 0; n < nd; n++) {
             SDF_SET_ENTRY_STRING(append->dim_labels[n],
-                first_mesh->dim_labels[n]);
+                    first_mesh->dim_labels[n]);
             SDF_SET_ENTRY_STRING(append->dim_units[n],
-                first_mesh->dim_units[n]);
+                    first_mesh->dim_units[n]);
 #ifdef PARALLEL
             append->dims[n] = append->local_dims[n] = first_mesh->cpu_split[n];
 #else
@@ -1879,7 +1879,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 sdf_hash_block(h, append);
 
                 add_surface_variables(h, append, &append, &append_tail,
-                    &nappend);
+                        &nappend);
             }
 
             for (i = 0; i < 7; i++) {
@@ -1917,7 +1917,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 sdf_hash_block(h, append);
 
                 add_surface_variables(h, append, &append, &append_tail,
-                    &nappend);
+                        &nappend);
             }
         } else if (b->blocktype == SDF_BLOCKTYPE_PLAIN_VARIABLE
                 || b->blocktype == SDF_BLOCKTYPE_PLAIN_DERIVED) {
@@ -1993,9 +1993,9 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                         append->dim_units = calloc(nd, sizeof(char*));
                         for (n = 0; n < nd; n++) {
                             SDF_SET_ENTRY_STRING(append->dim_labels[n],
-                                old_mesh->dim_labels[n]);
+                                    old_mesh->dim_labels[n]);
                             SDF_SET_ENTRY_STRING(append->dim_units[n],
-                                old_mesh->dim_units[n]);
+                                    old_mesh->dim_units[n]);
                         }
 
                         sdf_hash_block(h, append);

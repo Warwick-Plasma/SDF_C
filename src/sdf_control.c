@@ -179,13 +179,13 @@ static int sdf_fopen(sdf_file_t *h, int mode)
 #ifdef PARALLEL
     if (mode == SDF_READ)
         ret = MPI_File_open(h->comm, (char*)h->filename, MPI_MODE_RDONLY,
-            MPI_INFO_NULL, &h->filehandle);
+                MPI_INFO_NULL, &h->filehandle);
     else if (mode == SDF_WRITE)
         ret = MPI_File_open(h->comm, (char*)h->filename,
-            MPI_MODE_WRONLY|MPI_MODE_CREATE, MPI_INFO_NULL, &h->filehandle);
+                MPI_MODE_WRONLY|MPI_MODE_CREATE, MPI_INFO_NULL, &h->filehandle);
     else
         ret = MPI_File_open(h->comm, (char*)h->filename,
-            MPI_MODE_RDWR, MPI_INFO_NULL, &h->filehandle);
+                MPI_MODE_RDWR, MPI_INFO_NULL, &h->filehandle);
     if (ret) h->filehandle = 0;
 #else
     if (mode == SDF_READ)
@@ -271,7 +271,7 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 
 #ifndef PARALLEL
     if (h->mmap) {
-       h->fd = fileno(h->filehandle);
+        h->fd = fileno(h->filehandle);
     }
 #endif
 
@@ -321,17 +321,20 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
 {
     int i;
     struct run_info *run;
+    char **var;
 
     if (!b) return 1;
 
     if (b->grids) {
-        if (!h->mmap && b->done_data && !b->dont_own_data)
-            for (i = 0; i < b->ngrids; i++)
+        if (!h->mmap && b->done_data && !b->dont_own_data) {
+            for (i = 0; i < b->ngrids; i++) {
                 if (b->grids[i]) {
                     if (b->data == b->grids[i])
                         b->data = NULL;
                     free(b->grids[i]);
                 }
+            }
+        }
         free(b->grids);
         b->grids = NULL;
     }
@@ -345,6 +348,9 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
             free(b->data);
             b->data = NULL;
         } else if (b->blocktype == SDF_BLOCKTYPE_NAMEVALUE) {
+            var = b->data;
+            for (i=0; i < b->ndims; i++)
+                free(var[i]);
             free(b->data);
             b->data = NULL;
         }
@@ -402,6 +408,8 @@ int sdf_free_block(sdf_file_t *h, sdf_block_t *b)
     FREE_ITEM(b->must_read);
     FREE_ITEM(b->station_id);
     FREE_ITEM(b->station_index);
+    FREE_ITEM(b->obstacle_id);
+    FREE_ITEM(b->vfm_id);
 
     FREE_ARRAY(b, station_ids);
     FREE_ARRAY(b, station_names);
@@ -578,9 +586,9 @@ static int factor2d(int ncpus, int64_t *dims, int *cpu_split)
             grid = grids[0][ii] * grids[1][jj];
             deviation = ABS(grid-gridav);
             if (deviation < mindeviation) {
-              mindeviation = deviation;
-              for (n=0; n < ndims; n++)
-                  cpu_split[n] = cpu_split_tmp[n];
+                mindeviation = deviation;
+                for (n=0; n < ndims; n++)
+                    cpu_split[n] = cpu_split_tmp[n];
             }
         }}
     }}
@@ -638,9 +646,9 @@ static int factor3d(int ncpus, int64_t *dims, int *cpu_split)
             grid = grids[0][ii] * grids[1][jj] * grids[2][kk];
             deviation = ABS(grid-gridav);
             if (deviation < mindeviation) {
-              mindeviation = deviation;
-              for (n=0; n < ndims; n++)
-                  cpu_split[n] = cpu_split_tmp[n];
+                mindeviation = deviation;
+                for (n=0; n < ndims; n++)
+                    cpu_split[n] = cpu_split_tmp[n];
             }
         }}}
     }}}
@@ -689,7 +697,7 @@ int sdf_get_domain_bounds(sdf_file_t *h, int rank, int *starts, int *local_dims)
         split_big = (int)(b->dims[n] - b->cpu_split[n] * npoint_min);
         if (coords >= split_big) {
             starts[n] = split_big * (npoint_min + 1)
-                + (coords - split_big) * npoint_min;
+                    + (coords - split_big) * npoint_min;
             local_dims[n] = npoint_min;
         } else {
             starts[n] = coords * (npoint_min + 1);
@@ -887,7 +895,7 @@ static int sdf_header_copy(const sdf_file_t *h_in, sdf_file_t *h_out)
 static uint32_t Q[41790], indx, carry, xcng, xs;
 
 #define CNG (xcng = 69609 * xcng + 123)
-#define XS (xs ^= xs<<13, xs ^= (unsigned)xs>>17, xs ^= xs>>5 )
+#define XS (xs ^= xs<<13, xs ^= (unsigned)xs>>17, xs ^= xs>>5)
 #define SUPR (indx < 41790 ? Q[indx++] : refill())
 #define KISS SUPR + CNG + XS
 
@@ -895,7 +903,7 @@ static uint32_t refill(void)
 {
     int i;
     uint64_t t;
-    for (i=0; i<41790; i++) {
+    for (i=0; i < 41790; i++) {
         t = 7010176ULL * Q[i] + carry;
         carry = (t>>32);
         Q[i] = (uint32_t)~(t);
@@ -920,8 +928,8 @@ static void sdf_random_init(void)
     carry = 362436;
     xcng = 1236789;
     xs = 521288629;
-    for (i=0; i<41790; i++) Q[i] = CNG + XS;
-    for (i=0; i<41790; i++) sdf_random();
+    for (i=0; i < 41790; i++) Q[i] = CNG + XS;
+    for (i=0; i < 41790; i++) sdf_random();
 }
 
 
@@ -1005,8 +1013,8 @@ int sdf_block_set_array_section(sdf_block_t *b, const int ndims,
         }
     }
 
-    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH ||
-            b->blocktype == SDF_BLOCKTYPE_POINT_MESH) {
+    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH
+            || b->blocktype == SDF_BLOCKTYPE_POINT_MESH) {
         b->nelements_local = 0;
         for (i = 0; i < b->ndims; i++)
             b->nelements_local += (b->array_ends[i] - b->array_starts[i]);

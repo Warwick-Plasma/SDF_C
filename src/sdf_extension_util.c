@@ -83,8 +83,8 @@ void sdf_extension_free_data(sdf_file_t *h)
     if (sdf_global_extension) {
         // Weird pointer copying required by ISO C
         p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_free");
-        if ( !p )
-           return;
+        if (!p)
+            return;
         memcpy(&sdf_extension_free, &p, sizeof(p));
 
         sdf_extension_free(h);
@@ -149,8 +149,8 @@ int sdf_read_blocklist_all(sdf_file_t *h)
         b = next;
         next = b->next;
 
-        if (b->blocktype != SDF_BLOCKTYPE_PLAIN_DERIVED &&
-                b->blocktype == SDF_BLOCKTYPE_POINT_DERIVED) continue;
+        if (b->blocktype != SDF_BLOCKTYPE_PLAIN_DERIVED
+                && b->blocktype == SDF_BLOCKTYPE_POINT_DERIVED) continue;
 
         if (b->ndims > 0 || !b->mesh_id) continue;
 
@@ -175,4 +175,24 @@ int sdf_read_blocklist_all(sdf_file_t *h)
     }
 
     return 0;
+}
+
+
+void sdf_extension_print_version(sdf_file_t *h)
+{
+    int major, minor;
+    sdf_extension_t *ext;
+
+    // Retrieve the extended interface library from the plugin manager
+    sdf_extension_load(h);
+    ext = sdf_global_extension;
+
+    if (ext) {
+        ext->get_version(ext, &major, &minor);
+        printf("Loaded extension: %s-%d.%d\n", ext->get_name(ext), major, minor);
+    } else {
+        printf("No extension loaded\n");
+        if (sdf_global_extension_failed)
+            printf("%s\n", h->error_message);
+    }
 }
