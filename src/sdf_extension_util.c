@@ -83,8 +83,8 @@ void sdf_extension_free_data(sdf_file_t *h)
     if (sdf_global_extension) {
         // Weird pointer copying required by ISO C
         p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_free");
-        if ( !p )
-           return;
+        if (!p)
+            return;
         memcpy(&sdf_extension_free, &p, sizeof(p));
 
         sdf_extension_free(h);
@@ -149,8 +149,8 @@ int sdf_read_blocklist_all(sdf_file_t *h)
         b = next;
         next = b->next;
 
-        if (b->blocktype != SDF_BLOCKTYPE_PLAIN_DERIVED &&
-                b->blocktype == SDF_BLOCKTYPE_POINT_DERIVED) continue;
+        if (b->blocktype != SDF_BLOCKTYPE_PLAIN_DERIVED
+                && b->blocktype == SDF_BLOCKTYPE_POINT_DERIVED) continue;
 
         if (b->ndims > 0 || !b->mesh_id) continue;
 

@@ -26,7 +26,7 @@
     } while(0)
 
 #define COPY_ENTRY_NAME(copyname, count) \
-   COPY_ENTRY((copy->copyname), (original->copyname), (count))
+    COPY_ENTRY((copy->copyname), (original->copyname), (count))
 
 #define COPY_ENTRY_STR(copyob, originalob) do { \
         size_t _len; \
@@ -277,8 +277,8 @@ int sdf_modify_array_section(sdf_file_t *h, sdf_block_t *b, void *data,
 
     // Sanity check
     for (i = 0; i < b->ndims; i++)
-        if (data_ends[i] > b->dims[i] ||
-                data_starts[i] > data_ends[i]) goto cleanup;
+        if (data_ends[i] > b->dims[i]
+                || data_starts[i] > data_ends[i]) goto cleanup;
 
     // First check for any writes which can be combined
     sz = length = SDF_TYPE_SIZES[b->datatype];
@@ -412,13 +412,13 @@ int sdf_modify_add_block(sdf_file_t *h, sdf_block_t *block)
     }
 
     b = h->last_block_in_file;
-    block->block_start = b->next_block_location =
-            b->block_start + h->block_header_length + b->info_length;
+    block->block_start = b->next_block_location
+            = b->block_start + h->block_header_length + b->info_length;
     block->inline_block_start = b->inline_next_block_location = extent;
-    block->data_location = extent + h->block_header_length +
-            block->info_length;
-    h->summary_location = block->inline_next_block_location =
-            block->data_location + block->data_length;
+    block->data_location = extent + h->block_header_length
+            + block->info_length;
+    h->summary_location = block->inline_next_block_location
+            = block->data_location + block->data_length;
     block->rewrite_metadata = 1;
     block->in_file = 1;
     h->last_block_in_file = block;
@@ -586,7 +586,7 @@ int sdf_modify_add_material(sdf_file_t *h, sdf_block_t *stitched,
         b->blocktype = SDF_BLOCKTYPE_STITCHED_MATERIAL;
 
         info_length = SOI4 + (b->ndims + 1) * h->id_length
-            + b->ndims * h->string_length;
+               + b->ndims * h->string_length;
     } else
         b->blocktype = SDF_BLOCKTYPE_STITCHED_MATVAR;
 

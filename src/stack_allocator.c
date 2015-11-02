@@ -29,8 +29,8 @@ void stack_alloc(stack_handle_t *sh, sdf_block_t *b)
 
     if (b->done_data || b->dont_own_data) return;
 
-    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH ||
-            b->blocktype == SDF_BLOCKTYPE_POINT_MESH) {
+    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH
+            || b->blocktype == SDF_BLOCKTYPE_POINT_MESH) {
         b->ngrids = 3; //b->ndims;
         sz = b->ngrids * sizeof(*b->grids);
         b->grids = calloc(1, sz);
@@ -68,15 +68,15 @@ static void stack_free_data_or_grid(stack_handle_t *sh, sdf_block_t *b)
 
             for (i = nmin; i < b->ngrids; i++) {
                 free(b->grids[i]);
-                sh->memory_size -=
-                    b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
+                sh->memory_size
+                        -= b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
                 sh->memory_size -= sizeof(*b->grids);
             }
             free(b->grids);
         } else if (!b->mmap) {
             free(b->data);
-            sh->memory_size -=
-                b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
+            sh->memory_size
+                    -= b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
         }
     } else if (b->grids)
         free(b->grids);

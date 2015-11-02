@@ -21,12 +21,12 @@
 
 #define SDF_COMMON_INFO() do { \
     if (!h->current_block || !h->current_block->done_header) { \
-      if (h->rank == h->rank_master) { \
-        fprintf(stderr, "*** ERROR ***\n"); \
-        fprintf(stderr, "SDF block header has not been read." \
-                " Ignoring call.\n"); \
-      } \
-      return 1; \
+        if (h->rank == h->rank_master) { \
+            fprintf(stderr, "*** ERROR ***\n"); \
+            fprintf(stderr, "SDF block header has not been read." \
+                    " Ignoring call.\n"); \
+        } \
+        return 1; \
     } \
     b = h->current_block; \
     if (b->done_info) return 0; \
@@ -57,7 +57,7 @@ void sdf_trim(char *str)
     int i, len = strlen(str);
     char *ptr = str + len - 1;
 
-    for (i=0, ptr=str+len-1; i<len && *ptr==' '; i++, ptr--)
+    for (i=0, ptr=str+len-1; i < len && *ptr == ' '; i++, ptr--)
         *ptr = '\0';
 }
 
@@ -86,11 +86,11 @@ static inline int sdf_get_next_block(sdf_file_t *h)
         sdf_block_t *block = malloc(sizeof(sdf_block_t));
         memset(block, 0, sizeof(sdf_block_t));
         if (h->use_summary)
-            block->summary_block_start = block->block_start =
-                h->summary_location;
+            block->summary_block_start = block->block_start
+                    = h->summary_location;
         else
-            block->inline_block_start = block->block_start =
-                h->first_block_location;
+            block->inline_block_start = block->block_start
+                    = h->first_block_location;
         h->blocklist = h->tail = h->current_block = block;
     }
 
@@ -249,37 +249,37 @@ int sdf_purge_duplicates(sdf_file_t *h)
         next = b->next;
 
         subnext = sdf_find_block_by_id(h, b->id);
-        if ( !subnext || subnext == b )
-           continue;
+        if (!subnext || subnext == b)
+            continue;
 
         sdf_delete_hash_block(h, b);
 
         if (h->purge_duplicated_ids) {
-           sdf_modify_remove_block(h, b);
+            sdf_modify_remove_block(h, b);
         } else {
-           pos = strlen(b->id);
-           if ( pos == h->id_length )
-              pos--;
+            pos = strlen(b->id);
+            if (pos == h->id_length)
+                pos--;
 
-           // Mangle ID by appending an integer. Allow for up to 99
-           // duplicated blocks
-           for (i=1; i < 99; i++) {
-              if (i == 10 && pos == h->id_length - 1)
-                 pos--;
+            // Mangle ID by appending an integer. Allow for up to 99
+            // duplicated blocks
+            for (i=1; i < 99; i++) {
+                if (i == 10 && pos == h->id_length - 1)
+                    pos--;
 
-              sprintf(b->id + pos, "%d", i);
+                sprintf(b->id + pos, "%d", i);
 
-              // Check that the new ID is unique
-              subnext = sdf_find_block_by_id(h, b->id);
-              if ( !subnext )
-                 break;
-           }
+                // Check that the new ID is unique
+                subnext = sdf_find_block_by_id(h, b->id);
+                if (!subnext)
+                    break;
+            }
 
-           if ( subnext )
-              // Discard block if we can't find a unique ID
-              sdf_modify_remove_block(h, b);
-           else
-              sdf_hash_block(h, b);
+            if (subnext)
+                // Discard block if we can't find a unique ID
+                sdf_modify_remove_block(h, b);
+            else
+                sdf_hash_block(h, b);
         }
     }
 
@@ -568,12 +568,12 @@ static void build_summary_buffer(sdf_file_t *h)
         blockbuf_head = blockbuf = calloc(1,sizeof(*blockbuf));
         buflen = 0;
         nblocks = 0;
-        skip_summary = (h->summary_location &&
-                h->summary_location != h->first_block_location);
+        skip_summary = (h->summary_location
+               && h->summary_location != h->first_block_location);
         // Read the block metadata into a temporary linked list structure
         while (1) {
-            if (skip_summary &&
-                h->current_location >= h->summary_location) break;
+            if (skip_summary
+                    && h->current_location >= h->summary_location) break;
 
             sdf_seek(h);
 
@@ -584,9 +584,9 @@ static void build_summary_buffer(sdf_file_t *h)
             if (count != 0) break;
 
             memcpy(&next_block_location, blockbuf->buffer,
-                   sizeof(next_block_location));
+                    sizeof(next_block_location));
             memcpy(&data_location, (char*)blockbuf->buffer + SOI8,
-                   sizeof(data_location));
+                    sizeof(data_location));
 
             if (h->swap) {
                 _SDF_BYTE_SWAP64(next_block_location);
@@ -604,10 +604,10 @@ static void build_summary_buffer(sdf_file_t *h)
             } else {
                 if (data_location > block_location)
                     info_length = (int32_t)(data_location
-                        - block_location) - h->block_header_length;
+                            - block_location) - h->block_header_length;
                 else
                     info_length = (int32_t)(next_block_location
-                        - block_location) - h->block_header_length;
+                            - block_location) - h->block_header_length;
             }
 
             // Read the block specific metadata if it exists
@@ -851,7 +851,7 @@ static int sdf_array_datatype(sdf_file_t *h)
     sdf_factor(h);
 
     MPI_Type_create_subarray(b->ndims, sizes, subsizes, b->starts,
-        MPI_ORDER_FORTRAN, b->mpitype, &b->distribution);
+            MPI_ORDER_FORTRAN, b->mpitype, &b->distribution);
     MPI_Type_commit(&b->distribution);
 #else
     for (n=0; n < b->ndims; n++) b->local_dims[n] = b->dims[n];
@@ -1081,7 +1081,7 @@ static int sdf_read_array(sdf_file_t *h)
         h->indent = 0;
         SDF_DPRNT("\n");
         SDF_DPRNT("b->name: %s ", b->name);
-        for (n=0; n<b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->local_dims[n]);
+        for (n=0; n < b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->local_dims[n]);
         SDF_DPRNT("\n  ");
         if (b->datatype_out == SDF_DATATYPE_CHARACTER) {
             p = b->data;
