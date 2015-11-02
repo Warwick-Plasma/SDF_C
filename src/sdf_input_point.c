@@ -14,12 +14,12 @@
 
 #define SDF_COMMON_MESH_INFO() do { \
     if (!h->current_block || !h->current_block->done_header) { \
-      if (h->rank == h->rank_master) { \
-        fprintf(stderr, "*** ERROR ***\n"); \
-        fprintf(stderr, "SDF block header has not been read." \
-                " Ignoring call.\n"); \
-      } \
-      return 1; \
+        if (h->rank == h->rank_master) { \
+            fprintf(stderr, "*** ERROR ***\n"); \
+            fprintf(stderr, "SDF block header has not been read." \
+                    " Ignoring call.\n"); \
+        } \
+        return 1; \
     } \
     b = h->current_block; \
     if (b->done_info) return 0; \
@@ -214,15 +214,16 @@ int sdf_read_point_mesh(sdf_file_t *h)
         h->indent = 0;
         SDF_DPRNT("\n");
         SDF_DPRNT("b->name: %s ", b->name);
-        for (n=0; n<b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->nelements_local);
+        for (n=0; n < b->ndims; n++)
+            SDF_DPRNT("%" PRIi64 " ",b->nelements_local);
         SDF_DPRNT("\n");
         h->indent = 2;
     }
     for (n = 0; n < 3; n++) {
         if (b->ndims > n) {
             if (b->array_starts)
-                h->current_location +=
-                    b->array_starts[n] * SDF_TYPE_SIZES[b->datatype];
+                h->current_location
+                        += b->array_starts[n] * SDF_TYPE_SIZES[b->datatype];
 #ifdef PARALLEL
             sdf_create_1d_distribution(h, b->dims[0], b->nelements_local,
                     b->starts[0]);
@@ -238,8 +239,8 @@ int sdf_read_point_mesh(sdf_file_t *h)
             }
             h->current_location += SDF_TYPE_SIZES[b->datatype] * b->dims[0];
             if (b->array_starts)
-                h->current_location -=
-                    b->array_starts[n] * SDF_TYPE_SIZES[b->datatype];
+                h->current_location
+                        -= b->array_starts[n] * SDF_TYPE_SIZES[b->datatype];
         }
     }
 
@@ -261,7 +262,7 @@ static int sdf_point_factor(sdf_file_t *h, int64_t *nelements_local)
 
     if (h->rank >= split_big) {
         b->starts[0] = split_big * (npoint_min + 1)
-            + (h->rank - split_big) * npoint_min;
+              + (h->rank - split_big) * npoint_min;
         *nelements_local = npoint_min;
     } else {
         b->starts[0] = h->rank * (npoint_min + 1);
@@ -307,7 +308,8 @@ int sdf_read_point_variable(sdf_file_t *h)
         h->indent = 0;
         SDF_DPRNT("\n");
         SDF_DPRNT("b->name: %s ", b->name);
-        for (n=0; n<b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->nelements_local);
+        for (n=0; n < b->ndims; n++)
+            SDF_DPRNT("%" PRIi64 " ",b->nelements_local);
         SDF_DPRNT("\n  ");
         SDF_DPRNTar(b->data, b->nelements_local);
     }
