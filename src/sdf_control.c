@@ -348,9 +348,11 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
             free(b->data);
             b->data = NULL;
         } else if (b->blocktype == SDF_BLOCKTYPE_NAMEVALUE) {
-            var = b->data;
-            for (i=0; i < b->ndims; i++)
-                free(var[i]);
+            if (b->datatype == SDF_DATATYPE_CHARACTER) {
+                var = b->data;
+                for (i=0; i < b->ndims; i++)
+                    free(var[i]);
+            }
             free(b->data);
             b->data = NULL;
         }
