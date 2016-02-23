@@ -1,3 +1,11 @@
+/*
+ * SDF (Self-Describing Format) Software Library
+ * Copyright (c) 2013-2016, SDF Development Team
+ *
+ * Distributed under the terms of the BSD 3-clause License.
+ * See the LICENSE file for details.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
