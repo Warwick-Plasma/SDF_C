@@ -4,6 +4,7 @@ if(PARALLEL)
    find_package(MPI REQUIRED)
    include_directories(${MPI_C_INCLUDE_PATH})
    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPARALLEL ${MPI_C_COMPILE_FLAGS}")
+   include(CMake/CheckMPIVersion.cmake)
 endif()
 
 set(TOPLEVEL "${CMAKE_CURRENT_SOURCE_DIR}")
