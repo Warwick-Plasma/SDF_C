@@ -781,6 +781,12 @@ char *sdf_get_library_commit_date(void);
 
 
 /**
+ @brief Returns 1 if compiled with SDF_DEBUG and 0 otherwise
+ */
+int sdf_has_debug_info(void);
+
+
+/**
  @brief Prints the name and version of any loaded extension modules
  */
 void sdf_extension_print_version(sdf_file_t *h);
