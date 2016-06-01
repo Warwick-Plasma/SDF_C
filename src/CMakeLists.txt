@@ -14,6 +14,11 @@ set(SOURCES
 
 if(NOT TARGET sdfc)
    add_library(sdfc STATIC ${SOURCES})
+   if(PARALLEL)
+       set_source_files_properties(
+           ${SOURCES}
+           PROPERTIES COMPILE_FLAGS "${MPI_C_COMPILE_FLAGS}")
+   endif()
 endif()
 
 execute_process(COMMAND sh gen_commit_string.sh
