@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.8)
 if(PARALLEL)
    find_package(MPI REQUIRED)
    include_directories(${MPI_C_INCLUDE_PATH})
-   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPARALLEL ${MPI_C_COMPILE_FLAGS}")
+   add_definitions(-DPARALLEL)
    include(CMake/CheckMPIVersion.cmake)
 endif()
 
