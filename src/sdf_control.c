@@ -1054,3 +1054,13 @@ char *sdf_get_library_commit_date(void)
 {
     return strdup(SDF_COMMIT_DATE);
 }
+
+
+int sdf_has_debug_info(void)
+{
+#ifdef SDF_DEBUG
+    return 1;
+#else
+    return 0;
+#endif
+}
