@@ -23,3 +23,4 @@ endif()
 
 execute_process(COMMAND sh gen_commit_string.sh
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+install(TARGETS sdfc DESTINATION lib COMPONENT develop)
