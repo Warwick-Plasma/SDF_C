@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <sdf_extension.h>
 #include <sdf_derived.h>
 #include <sdf.h>
@@ -24,6 +27,12 @@ void *sdf_extension_load(sdf_file_t *h)
 {
     sdf_extension_create_t *sdf_extension_create;
     void *p;
+    char *libname1 = "sdf_extension.so";
+    char *libname2 = "libsdf_extension.so";
+    char *path_env, *pathname, *path;
+    char *sep = ":;,";
+    int len;
+    struct stat sb;
 
     h->sdf_extension_version  = SDF_EXTENSION_VERSION;
     h->sdf_extension_revision = SDF_EXTENSION_REVISION;
@@ -35,7 +44,39 @@ void *sdf_extension_load(sdf_file_t *h)
 
     if (sdf_global_extension) return sdf_global_extension;
 
-    sdf_global_extension_dlhandle = dlopen("sdf_extension.so", RTLD_LAZY);
+    /*
+     * SDF_EXTENSION_PATH is a string separated by colon, semicolon or comma
+     * Each substring is examined in turn. If it is a file then we attempt to
+     * load it as a dynamic library. If it is a directory then we attempt to
+     * load a file named "sdf_extension.so" or "libsdf_extension.so" in that
+     * directory. The routine exits once a valid library is found.
+     */
+    path_env = getenv("SDF_EXTENSION_PATH");
+    if (path_env) {
+        len = strlen(path_env) + strlen(libname1) + strlen(libname2) + 2;
+        pathname = malloc(len);
+        for (path = strtok(path_env, sep); path; path = strtok(NULL, sep)) {
+            stat(path, &sb);
+            if (S_ISDIR(sb.st_mode)) {
+                snprintf(pathname, len, "%s/%s", path, libname1);
+                sdf_global_extension_dlhandle = dlopen(pathname, RTLD_LAZY);
+                if (!sdf_global_extension_dlhandle) {
+                    snprintf(pathname, len, "%s/%s", path, libname2);
+                    sdf_global_extension_dlhandle = dlopen(pathname, RTLD_LAZY);
+                }
+            } else if (S_ISREG(sb.st_mode)) {
+                sdf_global_extension_dlhandle = dlopen(path, RTLD_LAZY);
+            }
+            if (sdf_global_extension_dlhandle) break;
+        }
+        free(pathname);
+    }
+
+    if (!sdf_global_extension_dlhandle) {
+        sdf_global_extension_dlhandle = dlopen(libname1, RTLD_LAZY);
+        if (!sdf_global_extension_dlhandle)
+            sdf_global_extension_dlhandle = dlopen(libname2, RTLD_LAZY);
+    }
 
     if (!sdf_global_extension_dlhandle) {
         sdf_global_extension_failed = 1;
