@@ -53,6 +53,21 @@ void stack_alloc(stack_handle_t *sh, sdf_block_t *b)
             b->grids[i] = calloc(1, sz);
             sh->memory_size += sz;
         }
+    } else if (b->blocktype == SDF_BLOCKTYPE_LAGRANGIAN_MESH) {
+        b->ngrids = 3; //b->ndims;
+        sz = b->ngrids * sizeof(*b->grids);
+        b->grids = calloc(1, sz);
+        sh->memory_size += sz;
+        for (i = 0; i < b->ndims; i++) {
+            sz = b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
+            b->grids[i] = calloc(1, sz);
+            sh->memory_size += sz;
+        }
+        for (i = b->ndims; i < b->ngrids; i++) {
+            sz = SDF_TYPE_SIZES[b->datatype_out];
+            b->grids[i] = calloc(1, sz);
+            sh->memory_size += sz;
+        }
     } else {
         sz = b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
         b->data = calloc(1, sz);
