@@ -1757,6 +1757,11 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                 nappend++;
                 append_tail = append;
 
+                // Rename original block so that we can use the original name
+                // for plotting
+
+                sdf_delete_hash_block(h, b);
+
                 str = strcat_alloc(b->id, "orig");
                 sdf_unique_id(h, str);
                 append->id = b->id;
