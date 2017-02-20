@@ -1727,7 +1727,7 @@ static void add_global_station(sdf_file_t *h, sdf_block_t **append,
 /** @ingroup derived */
 int sdf_add_derived_blocks(sdf_file_t *h)
 {
-    sdf_block_t *b, *next, *append, *append_head, *append_tail, *tmp_block;
+    sdf_block_t *b, *next, *append, *append_head, *append_tail;
     sdf_block_t *mesh, *first_mesh = NULL;
     sdf_block_t *current_block = h->current_block;
     int i, n, nd, nappend = 0;
@@ -1767,6 +1767,13 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                 append->id = b->id;
                 b->id = str;
 
+                str = strcat_alloc(b->name, "Orig");
+                sdf_unique_name(h, str);
+                append->name = b->name;
+                b->name = str;
+
+                sdf_hash_block(h, b);
+
                 nd = 3;
                 append->geometry = SDF_GEOMETRY_CARTESIAN;
                 append->blocktype = SDF_BLOCKTYPE_LAGRANGIAN_MESH;
@@ -1780,11 +1787,6 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                 memcpy(append->dims, b->dims, nd * sizeof(b->dims[0]));
 
                 append->dont_display = 0;
-
-                str = strcat_alloc(b->name, "Orig");
-                sdf_unique_name(h, str);
-                append->name = b->name;
-                b->name = str;
 
                 len1 = 2 * nd * sizeof(double*);
                 append->extents = malloc(len1);
@@ -1829,20 +1831,6 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                 // Hack to prevent storage being allocated for this variable.
                 append->dont_allocate = 0;
 
-                // Exchange old mesh with new one
-                tmp_block = calloc(1, sizeof(*b));
-                memcpy(tmp_block, b, sizeof(*b));
-                memcpy(b, append, sizeof(*b));
-                memcpy(append, tmp_block, sizeof(*b));
-                b->next = append->next;
-                b->prev = append->prev;
-                b->subblock = append;
-                append->next = tmp_block->next;
-                append->prev = tmp_block->prev;
-                append->subblock = b;
-                free(tmp_block);
-
-                sdf_hash_block(h, b);
                 sdf_hash_block(h, append);
             }
 
