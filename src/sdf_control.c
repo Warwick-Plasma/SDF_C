@@ -770,8 +770,11 @@ int sdf_factor(sdf_file_t *h)
         b->dims[n] = old_dims[n];
 
     sdf_get_domain_bounds(h, h->rank, b->starts, local_dims);
-    for (n = 0; n < b->ndims; n++)
+    for (n = 0; n < b->ndims; n++) {
         b->local_dims[n] = local_dims[n];
+        if (b->local_dims[n] > b->dims[n])
+            b->local_dims[n] = b->dims[n];
+    }
     for (n = b->ndims; n < 3; n++)
         b->local_dims[n] = 1;
 #else
