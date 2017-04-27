@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <sdf_vector_type.h>
 #include <sdf_list_type.h>
 #include <sdf.h>
@@ -58,13 +59,14 @@ static char *strcat_alloc(char *base, char *sfx)
 
 
 
-void sdf_unique_id(sdf_file_t *h, char *id)
+void sdf_unique_id(sdf_file_t *h, char *str)
 {
     sdf_block_t *b, *next;
     int i, pos, len, sublen, unique;
+    int max_length = h->id_length;
 
-    len = strlen(id);
-    if (len >= h->id_length - 1) id[h->id_length-1] = '\0';
+    len = strlen(str);
+    if (len >= max_length - 1) str[max_length-1] = '\0';
 
     for (i=0; i < 99; i++) {
         next = h->blocklist;
@@ -74,11 +76,11 @@ void sdf_unique_id(sdf_file_t *h, char *id)
             b = next;
             next = b->next;
 
-            if (b->id == id) continue;
+            if (b->id == str) continue;
 
             sublen = strlen(b->id) + 1;
 
-            if (len == sublen && memcmp(b->id, id, len) == 0) {
+            if (len == sublen && memcmp(b->id, str, len) == 0) {
                 unique = 0;
                 break;
             }
@@ -87,11 +89,51 @@ void sdf_unique_id(sdf_file_t *h, char *id)
         if (unique) break;
 
         pos = len - 2;
-        if (pos == h->id_length) pos--;
-        if (i == 9 && pos == h->id_length - 1) pos--;
+        if (pos == max_length) pos--;
+        if (i == 9 && pos == max_length - 1) pos--;
 
-        sprintf(id + pos, "%d", i+1);
-        len = strlen(id);
+        sprintf(str + pos, "%d", i+1);
+        len = strlen(str);
+    }
+}
+
+
+
+void sdf_unique_name(sdf_file_t *h, char *str)
+{
+    sdf_block_t *b, *next;
+    int i, pos, len, sublen, unique;
+    int max_length = h->string_length;
+
+    len = strlen(str);
+    if (len >= max_length - 1) str[max_length-1] = '\0';
+
+    for (i=0; i < 99; i++) {
+        next = h->blocklist;
+
+        unique = 1;
+        while (next) {
+            b = next;
+            next = b->next;
+
+            if (b->name == str) continue;
+
+            sublen = strlen(b->name) + 1;
+
+            if (len == sublen && memcmp(b->name, str, len) == 0) {
+                unique = 0;
+                break;
+            }
+        }
+
+        if (unique) break;
+
+        pos = len - 2;
+        if (pos == max_length) pos--;
+        if (i == 9 && pos == max_length - 1) pos--;
+
+        sprintf(str + pos, "%d", i+1);
+        len = strlen(str);
     }
 }
 
@@ -591,6 +633,155 @@ static sdf_block_t *sdf_callback_grid_component(sdf_file_t *h, sdf_block_t *b)
         b->local_dims[0] = b->nelements_local = mesh->nelements_local;
     else
         b->local_dims[0] = b->nelements_local = mesh->local_dims[b->nm];
+    return b;
+}
+
+
+
+static sdf_block_t *sdf_callback_cartesian_grid(sdf_file_t *h, sdf_block_t *b)
+{
+    sdf_block_t *mesh = b->subblock;
+    long long i, j, k;
+    double *x8p, *y8p, *z8p, *rr8p, *theta8p, *phi8p, *zz8p;
+    float *x4p, *y4p, *z4p, *rr4p, *theta4p, *phi4p, *zz4p;
+    double rr, theta, phi, zz, sin_theta, cos_theta, sin_phi, cos_phi;
+    double sin_theta_cos_phi, sin_theta_sin_phi;
+
+    b->datatype_out = b->subblock->datatype_out;
+    memcpy(b->local_dims, mesh->local_dims,
+           b->ndims * sizeof(b->local_dims[0]));
+    b->nelements_local = 1;
+    for (i = 0; i < b->ndims; i++)
+        b->nelements_local *= b->local_dims[i];
+
+    sdf_stack_alloc(h, b);
+
+    if (b->datatype_out == SDF_DATATYPE_REAL8) {
+        x8p = (double*)b->grids[0];
+        y8p = (double*)b->grids[1];
+        z8p = (double*)b->grids[2];
+
+        if (b->geometry == SDF_GEOMETRY_CYLINDRICAL) {
+            zz8p = (double*)mesh->grids[2];
+            for (k=0; k < b->local_dims[2]; k++) {
+                theta8p = (double*)mesh->grids[1];
+                zz = *zz8p;
+                for (j=0; j < b->local_dims[1]; j++) {
+                    rr8p = (double*)mesh->grids[0];
+                    theta = *theta8p;
+                    cos_theta = cos(theta);
+                    sin_theta = sin(theta);
+                    for (i=0; i < b->local_dims[0]; i++) {
+                        rr = *rr8p;
+
+                        *x8p = rr * cos_theta;
+                        *y8p = rr * sin_theta;
+                        *z8p = zz;
+
+                        rr8p++;
+                        x8p++;
+                        y8p++;
+                        z8p++;
+                    }
+                    theta8p++;
+                }
+                zz8p++;
+            }
+        } else {
+            phi8p = (double*)mesh->grids[2];
+            for (k=0; k < b->local_dims[2]; k++) {
+                theta8p = (double*)mesh->grids[1];
+                phi = *phi8p;
+                cos_phi = cos(phi);
+                sin_phi = sin(phi);
+                for (j=0; j < b->local_dims[1]; j++) {
+                    rr8p = (double*)mesh->grids[0];
+                    theta = *theta8p;
+                    cos_theta = cos(theta);
+                    sin_theta = sin(theta);
+                    sin_theta_cos_phi = sin_theta * cos_phi;
+                    sin_theta_sin_phi = sin_theta * sin_phi;
+                    for (i=0; i < b->local_dims[0]; i++) {
+                        rr = *rr8p;
+
+                        *x8p = rr * sin_theta_cos_phi;
+                        *y8p = rr * sin_theta_sin_phi;
+                        *z8p = rr * cos_theta;
+
+                        rr8p++;
+                        x8p++;
+                        y8p++;
+                        z8p++;
+                    }
+                    theta8p++;
+                }
+                phi8p++;
+            }
+        }
+    } else {
+        x4p = (float*)b->grids[0];
+        y4p = (float*)b->grids[1];
+        z4p = (float*)b->grids[2];
+
+        if (b->geometry == SDF_GEOMETRY_CYLINDRICAL) {
+            zz4p = (float*)mesh->grids[2];
+            for (k=0; k < b->local_dims[2]; k++) {
+                theta4p = (float*)mesh->grids[1];
+                zz = *zz4p;
+                for (j=0; j < b->local_dims[1]; j++) {
+                    rr4p = (float*)mesh->grids[0];
+                    theta = *theta4p;
+                    cos_theta = cos(theta);
+                    sin_theta = sin(theta);
+                    for (i=0; i < b->local_dims[0]; i++) {
+                        rr = *rr4p;
+
+                        *x4p = rr * cos_theta;
+                        *y4p = rr * sin_theta;
+                        *z4p = zz;
+
+                        rr4p++;
+                        x4p++;
+                        y4p++;
+                        z4p++;
+                    }
+                    theta4p++;
+                }
+                zz4p++;
+            }
+        } else {
+            phi4p = (float*)mesh->grids[2];
+            for (k=0; k < b->local_dims[2]; k++) {
+                theta4p = (float*)mesh->grids[1];
+                phi = *phi4p;
+                cos_phi = cos(phi);
+                sin_phi = sin(phi);
+                for (j=0; j < b->local_dims[1]; j++) {
+                    rr4p = (float*)mesh->grids[0];
+                    theta = *theta4p;
+                    cos_theta = cos(theta);
+                    sin_theta = sin(theta);
+                    sin_theta_cos_phi = sin_theta * cos_phi;
+                    sin_theta_sin_phi = sin_theta * sin_phi;
+                    for (i=0; i < b->local_dims[0]; i++) {
+                        rr = *rr4p;
+
+                        *x4p = rr * sin_theta_cos_phi;
+                        *y4p = rr * sin_theta_sin_phi;
+                        *z4p = rr * cos_theta;
+
+                        rr4p++;
+                        x4p++;
+                        y4p++;
+                        z4p++;
+                    }
+                    theta4p++;
+                }
+                phi4p++;
+            }
+        }
+    }
+
     return b;
 }
 
@@ -1543,6 +1734,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
     size_t len1, len2;
     char *str, *name1, *name2;
     char *grid_ids[] = { "x", "y", "z" };
+    char *grid_labels[] = { "X", "Y", "Z" };
 
     append = append_head = calloc(1, sizeof(sdf_block_t));
 
@@ -1555,6 +1747,92 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                 || b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH) {
             if (!first_mesh && b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH)
                 first_mesh = b;
+
+            if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH
+                    && (b->geometry == SDF_GEOMETRY_SPHERICAL
+                    ||  b->geometry == SDF_GEOMETRY_CYLINDRICAL)) {
+                // Add an unstructured cartesian grid corresponding to these
+                // coordinates
+                APPEND_BLOCK(append);
+                nappend++;
+                append_tail = append;
+
+                // Rename original block so that we can use the original name
+                // for plotting
+
+                sdf_delete_hash_block(h, b);
+
+                str = strcat_alloc(b->id, "orig");
+                sdf_unique_id(h, str);
+                append->id = b->id;
+                b->id = str;
+
+                str = strcat_alloc(b->name, "Orig");
+                sdf_unique_name(h, str);
+                append->name = b->name;
+                b->name = str;
+
+                sdf_hash_block(h, b);
+
+                nd = 3;
+                append->geometry = SDF_GEOMETRY_CARTESIAN;
+                append->blocktype = SDF_BLOCKTYPE_LAGRANGIAN_MESH;
+                append->derived = 1;
+                append->datatype = b->datatype;
+                append->datatype_out = b->datatype_out;
+                append->ndims = nd;
+                append->mult = b->mult;
+                append->stagger = b->stagger;
+                append->subblock = b;
+                memcpy(append->dims, b->dims, nd * sizeof(b->dims[0]));
+
+                append->dont_display = 0;
+
+                len1 = 2 * nd * sizeof(double*);
+                append->extents = malloc(len1);
+
+                append->extents[0] = -b->extents[3];
+                append->extents[1] = -b->extents[3];
+                append->extents[2] = -b->extents[3];
+                append->extents[3] =  b->extents[3];
+                append->extents[4] =  b->extents[3];
+                append->extents[5] =  b->extents[3];
+
+                if (b->geometry == SDF_GEOMETRY_CYLINDRICAL) {
+                    append->extents[4] = b->extents[4];
+                    append->extents[5] = b->extents[5];
+                }
+
+                append->ndim_labels = append->ndim_units = nd;
+                append->dim_labels = calloc(nd, sizeof(char*));
+                append->dim_units = calloc(nd, sizeof(char*));
+                for (n = 0; n < nd; n++) {
+                    SDF_SET_ENTRY_STRING(append->dim_labels[n],
+                            grid_labels[n]);
+                    SDF_SET_ENTRY_STRING(append->dim_units[n],
+                            mesh->dim_units[0]);
+                }
+
+                append->use_mult = b->use_mult;
+                if (b->use_mult) {
+                    append->dim_mults = calloc(nd, sizeof(*b->dim_mults));
+                    memcpy(append->dim_mults,
+                           b->dim_mults, nd * sizeof(b->dim_mults[0]));
+                }
+
+                append->n_ids = 1;
+                append->variable_ids = calloc(append->n_ids, sizeof(char*));
+                append->nvariable_ids = append->n_ids;
+                SDF_SET_ENTRY_ID(append->variable_ids[0], b->id);
+                append->must_read = calloc(append->n_ids, sizeof(char*));
+                append->must_read[0] = 1;
+                append->populate_data = sdf_callback_cartesian_grid;
+                append->done_header = 1;
+                // Hack to prevent storage being allocated for this variable.
+                append->dont_allocate = 0;
+
+                sdf_hash_block(h, append);
+            }
 
             for (i = 0; i < b->ndims; i++) {
                 // Add 1d arrays for each coordinate dimension of the
