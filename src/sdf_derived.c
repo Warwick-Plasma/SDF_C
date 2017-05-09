@@ -2248,6 +2248,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                         append->prev = append_tail;
                         append_tail = append;
 
+                        append->n_ids = 0;
                         append->must_read = NULL;
                         append->variable_ids = NULL;
 
