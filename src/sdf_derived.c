@@ -13,6 +13,7 @@
 #include <sdf_vector_type.h>
 #include <sdf_list_type.h>
 #include <sdf.h>
+#include <sdf_helper.h>
 #include "sdf_control.h"
 #include "sdf_input.h"
 #include "stack_allocator.h"
@@ -655,6 +656,9 @@ static sdf_block_t *sdf_callback_cartesian_grid(sdf_file_t *h, sdf_block_t *b)
         b->nelements_local *= b->local_dims[i];
 
     sdf_stack_alloc(h, b);
+
+    if (!mesh->done_data)
+        sdf_helper_read_data(h, mesh);
 
     if (b->datatype_out == SDF_DATATYPE_REAL8) {
         x8p = (double*)b->grids[0];
