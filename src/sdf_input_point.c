@@ -15,8 +15,12 @@
 #include "sdf_control.h"
 
 #ifndef PARALLEL
-# include <unistd.h>
 # include <sys/mman.h>
+# ifdef _WIN32
+#  include <io.h>
+# else
+#  include <unistd.h>
+# endif
 #endif
 
 //#define SDF_COMMON_MESH_LENGTH (4 + 8 + h->id_length + 4 * b->ndims)

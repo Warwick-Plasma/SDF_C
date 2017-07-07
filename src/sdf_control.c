@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sdf.h>
 #include "sdf_control.h"
@@ -21,6 +20,12 @@
 # include <mpi.h>
 #else
 # include <sys/mman.h>
+#endif
+
+#ifdef _WIN32
+# include <io.h>
+#else
+# include <unistd.h>
 #endif
 
 /**

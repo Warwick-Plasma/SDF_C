@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <assert.h>
 #include <sdf.h>
 #include "sdf_output.h"
@@ -18,6 +17,12 @@
 
 #ifdef PARALLEL
 # include <mpi.h>
+#endif
+
+#ifdef _WIN32
+# include <io.h>
+#else
+# include <unistd.h>
 #endif
 
 /**

@@ -11,11 +11,15 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <sdf_extension.h>
 #include <sdf_derived.h>
 #include <sdf.h>
 
+#ifdef _WIN32
+# include <io.h>
+#else
+# include <unistd.h>
+#endif
 
 static void *sdf_global_extension = NULL;
 static void *sdf_global_extension_dlhandle = NULL;

@@ -19,8 +19,12 @@
 #ifdef PARALLEL
 # include <mpi.h>
 #else
-# include <unistd.h>
 # include <sys/mman.h>
+# ifdef _WIN32
+#  include <io.h>
+# else
+#  include <unistd.h>
+# endif
 #endif
 
 /**
