@@ -27,7 +27,7 @@ int sdf_purge_duplicates(sdf_file_t *h);
 
 void *sdf_extension_load(sdf_file_t *h)
 {
-#ifndef __WIN32__
+#ifndef _WIN32
     sdf_extension_create_t *sdf_extension_create;
     void *p;
     char *libname1 = "sdf_extension.so";
@@ -100,7 +100,7 @@ void *sdf_extension_load(sdf_file_t *h)
 
 void sdf_extension_unload(void)
 {
-#ifndef __WIN32__
+#ifndef _WIN32
     sdf_extension_destroy_t *sdf_extension_destroy;
     void *p;
 
@@ -130,7 +130,7 @@ void sdf_extension_unload(void)
 
 void sdf_extension_free_data(sdf_file_t *h)
 {
-#ifndef __WIN32__
+#ifndef _WIN32
     sdf_extension_free_t *sdf_extension_free;
     void *p;
 
