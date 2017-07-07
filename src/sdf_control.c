@@ -26,8 +26,10 @@
 
 #ifdef _WIN32
 # include <io.h>
+# define FSEEKO _fseeki64
 #else
 # include <unistd.h>
+# define FSEEKO fseeko
 #endif
 
 /**
@@ -163,7 +165,7 @@ int sdf_seek_set(sdf_file_t *h, off_t offset)
 #ifdef PARALLEL
     return MPI_File_seek(h->filehandle, offset, MPI_SEEK_SET);
 #else
-    return fseeko(h->filehandle, offset, SEEK_SET);
+    return FSEEKO(h->filehandle, offset, SEEK_SET);
 #endif
 }
 

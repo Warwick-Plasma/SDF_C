@@ -21,8 +21,10 @@
 
 #ifdef _WIN32
 # include <io.h>
+# define FTRUNCATE _chsize
 #else
 # include <unistd.h>
+# define FTRUNCATE ftruncate
 #endif
 
 /*
@@ -84,7 +86,7 @@ static int sdf_truncate(sdf_file_t *h, int64_t size)
     return MPI_File_set_size(h->filehandle, length);
 #else
     off_t length = size;
-    return ftruncate(fileno(h->filehandle), length);
+    return FTRUNCATE(fileno(h->filehandle), length);
 #endif
 }
 

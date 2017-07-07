@@ -17,9 +17,11 @@
 #ifndef PARALLEL
 # ifdef _WIN32
 #  include <io.h>
+#  define FSEEKO _fseeki64
 # else
 #  include <unistd.h>
 #  include <sys/mman.h>
+#  define FSEEKO fseeko
 # endif
 #endif
 
@@ -192,7 +194,7 @@ static int sdf_helper_read_array(sdf_file_t *h, void **var_in, size_t count)
     MPI_File_set_view(h->filehandle, 0, MPI_BYTE, MPI_BYTE, "native",
             MPI_INFO_NULL);
 #else
-    fseeko(h->filehandle, h->current_location, SEEK_SET);
+    FSEEKO(h->filehandle, h->current_location, SEEK_SET);
     if (!fread(*var, sz, count, h->filehandle))
         return 1;
 #endif
