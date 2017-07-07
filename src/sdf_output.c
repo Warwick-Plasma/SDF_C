@@ -15,8 +15,9 @@
 #include "sdf_output.h"
 #include "sdf_control.h"
 #include "sdf_util.h"
+
 #ifdef PARALLEL
-#include <mpi.h>
+# include <mpi.h>
 #endif
 
 /*

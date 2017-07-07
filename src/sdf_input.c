@@ -15,11 +15,12 @@
 #include "sdf_input_point.h"
 #include "sdf_input_station.h"
 #include "sdf_control.h"
+
 #ifdef PARALLEL
-#include <mpi.h>
+# include <mpi.h>
 #else
-#include <unistd.h>
-#include <sys/mman.h>
+# include <unistd.h>
+# include <sys/mman.h>
 #endif
 
 /**

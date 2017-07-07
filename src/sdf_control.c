@@ -18,9 +18,9 @@
 #include "commit_info.h"
 
 #ifdef PARALLEL
-#include <mpi.h>
+# include <mpi.h>
 #else
-#include <sys/mman.h>
+# include <sys/mman.h>
 #endif
 
 /**

@@ -13,9 +13,10 @@
 #include "sdf_input.h"
 #include "sdf_input_station.h"
 #include "sdf_control.h"
+
 #ifndef PARALLEL
-#include <unistd.h>
-#include <sys/mman.h>
+# include <unistd.h>
+# include <sys/mman.h>
 #endif
 
 //#define SDF_COMMON_MESH_LENGTH (4 + 8 + h->id_length + 4 * b->ndims)
