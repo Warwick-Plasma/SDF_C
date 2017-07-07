@@ -19,7 +19,9 @@
 #ifdef PARALLEL
 # include <mpi.h>
 #else
-# include <sys/mman.h>
+# ifndef _WIN32
+#  include <sys/mman.h>
+# endif
 #endif
 
 #ifdef _WIN32
@@ -374,7 +376,7 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
             b->data = NULL;
         }
     }
-#ifndef PARALLEL
+#if !defined(PARALLEL) && !defined(_WIN32)
     if (b->mmap) {
         munmap(b->mmap, b->mmap_len);
         b->mmap = NULL;

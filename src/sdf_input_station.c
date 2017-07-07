@@ -15,11 +15,11 @@
 #include "sdf_control.h"
 
 #ifndef PARALLEL
-# include <sys/mman.h>
 # ifdef _WIN32
 #  include <io.h>
 # else
 #  include <unistd.h>
+#  include <sys/mman.h>
 # endif
 #endif
 
@@ -180,7 +180,7 @@ int sdf_read_station_timehis(sdf_file_t *h, long *stat, int nstat,
         ii += i;
     }
 
-#ifndef PARALLEL
+#if !defined(PARALLEL) && !defined(_WIN32)
     if (h->mmap) {
         mlen = sysconf(_SC_PAGESIZE);
         mstart = mlen * (b->data_location / mlen);
