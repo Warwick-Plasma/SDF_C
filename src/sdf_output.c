@@ -9,14 +9,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <ctype.h>
 #include <sdf.h>
 #include "sdf_output.h"
 #include "sdf_control.h"
 #include "sdf_util.h"
+
 #ifdef PARALLEL
-#include <mpi.h>
+# include <mpi.h>
+#endif
+
+#ifdef _WIN32
+# include <io.h>
+# define FTRUNCATE _chsize
+#else
+# include <unistd.h>
+# define FTRUNCATE ftruncate
 #endif
 
 /*
@@ -78,7 +86,7 @@ static int sdf_truncate(sdf_file_t *h, int64_t size)
     return MPI_File_set_size(h->filehandle, length);
 #else
     off_t length = size;
-    return ftruncate(fileno(h->filehandle), length);
+    return FTRUNCATE(fileno(h->filehandle), length);
 #endif
 }
 
@@ -136,9 +144,10 @@ static int safe_copy_string(char *s1, char *s2)
 
 static int sdf_safe_write_string_len(sdf_file_t *h, char *string, int length)
 {
-    char output[length];
-    int len_s;
+    char *output;
+    int len_s, errcode = 0;
 
+    output = malloc(length);
     len_s = trimwhitespace(string, output, length);
 
     if (len_s > length && h->rank == h->rank_master) {
@@ -148,7 +157,10 @@ static int sdf_safe_write_string_len(sdf_file_t *h, char *string, int length)
 
     if (len_s+1 < length) output[len_s+1] = 0;
 
-    return sdf_write_bytes(h, output, length);
+    errcode = sdf_write_bytes(h, output, length);
+    free(output);
+
+    return errcode;
 }
 
 

@@ -8,14 +8,16 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <sdf_extension.h>
 #include <sdf_derived.h>
 #include <sdf.h>
 
+#ifndef _WIN32
+# include <unistd.h>
+# include <dlfcn.h>
+#endif
 
 static void *sdf_global_extension = NULL;
 static void *sdf_global_extension_dlhandle = NULL;
@@ -25,6 +27,7 @@ int sdf_purge_duplicates(sdf_file_t *h);
 
 void *sdf_extension_load(sdf_file_t *h)
 {
+#ifndef _WIN32
     sdf_extension_create_t *sdf_extension_create;
     void *p;
     char *libname1 = "sdf_extension.so";
@@ -91,11 +94,13 @@ void *sdf_extension_load(sdf_file_t *h)
     sdf_global_extension = sdf_extension_create(h);
 
     return sdf_global_extension;
+#endif
 }
 
 
 void sdf_extension_unload(void)
 {
+#ifndef _WIN32
     sdf_extension_destroy_t *sdf_extension_destroy;
     void *p;
 
@@ -119,11 +124,13 @@ void sdf_extension_unload(void)
     sdf_global_extension_failed = 0;
 
     return;
+#endif
 }
 
 
 void sdf_extension_free_data(sdf_file_t *h)
 {
+#ifndef _WIN32
     sdf_extension_free_t *sdf_extension_free;
     void *p;
 
@@ -140,6 +147,7 @@ void sdf_extension_free_data(sdf_file_t *h)
     }
 
     return;
+#endif
 }
 
 

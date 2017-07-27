@@ -13,9 +13,16 @@
 #include "sdf_input.h"
 #include "sdf_input_cartesian.h"
 #include "sdf_control.h"
+
 #ifndef PARALLEL
-#include <unistd.h>
-#include <sys/mman.h>
+# ifdef _WIN32
+#  include <io.h>
+#  define FSEEKO _fseeki64
+# else
+#  include <unistd.h>
+#  include <sys/mman.h>
+#  define FSEEKO fseeko
+# endif
 #endif
 
 //#define SDF_COMMON_MESH_LENGTH (4 + 8 + h->id_length + 4 * b->ndims)
@@ -321,7 +328,7 @@ static int sdf_helper_read_array_halo(sdf_file_t *h, void **var_in)
     for (k = k0; k < k1; k++) {
     for (j = j0; j < j1; j++) {
         read_ptr = read_var + (i + nx * (j + ny * k)) * sz;
-        fseeko(h->filehandle, h->current_location, SEEK_SET);
+        FSEEKO(h->filehandle, h->current_location, SEEK_SET);
         if (!fread(read_ptr, sz, subsize, h->filehandle)) return 1;
         h->current_location += subsize * sz;
     }}
@@ -401,7 +408,7 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     sz = SDF_TYPE_SIZES[b->datatype];
     length = sz * count;
 
-#ifndef PARALLEL
+#if !defined(PARALLEL) && !defined(_WIN32)
     if (h->mmap) {
         mlen = sysconf(_SC_PAGESIZE);
         mstart = mlen * (h->current_location / mlen);
@@ -551,7 +558,7 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
                 break;
         }
 
-        fseeko(h->filehandle, offset, SEEK_SET);
+        FSEEKO(h->filehandle, offset, SEEK_SET);
         if (!fread(read_ptr, 1, length, h->filehandle))
             return (offset - h->current_location);
 

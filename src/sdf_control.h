@@ -10,6 +10,7 @@
 #define _SDF_CONTROL_H_
 
 #include "sdf_util.h"
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -15,11 +15,16 @@
 #include "sdf_input_point.h"
 #include "sdf_input_station.h"
 #include "sdf_control.h"
+
 #ifdef PARALLEL
-#include <mpi.h>
+# include <mpi.h>
 #else
-#include <unistd.h>
-#include <sys/mman.h>
+# ifdef _WIN32
+#  include <io.h>
+# else
+#  include <unistd.h>
+#  include <sys/mman.h>
+# endif
 #endif
 
 /**
@@ -1067,7 +1072,7 @@ static int sdf_read_array(sdf_file_t *h)
 
     length = SDF_TYPE_SIZES[b->datatype] * b->nelements_local;
 
-#ifndef PARALLEL
+#if !defined(PARALLEL) && !defined(_WIN32)
     if (h->mmap) {
         mlen = sysconf(_SC_PAGESIZE);
         mstart = mlen * (h->current_location / mlen);
@@ -1133,7 +1138,7 @@ static int sdf_read_datablock(sdf_file_t *h)
 
     h->current_location = b->data_location;
 
-#ifndef PARALLEL
+#if !defined(PARALLEL) && !defined(_WIN32)
     if (h->mmap) {
         mlen = sysconf(_SC_PAGESIZE);
         mstart = mlen * (h->current_location / mlen);

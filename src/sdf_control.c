@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sdf.h>
 #include "sdf_control.h"
@@ -18,9 +17,19 @@
 #include "commit_info.h"
 
 #ifdef PARALLEL
-#include <mpi.h>
+# include <mpi.h>
 #else
-#include <sys/mman.h>
+# ifndef _WIN32
+#  include <sys/mman.h>
+# endif
+#endif
+
+#ifdef _WIN32
+# include <io.h>
+# define FSEEKO _fseeki64
+#else
+# include <unistd.h>
+# define FSEEKO fseeko
 #endif
 
 /**
@@ -156,7 +165,7 @@ int sdf_seek_set(sdf_file_t *h, off_t offset)
 #ifdef PARALLEL
     return MPI_File_seek(h->filehandle, offset, MPI_SEEK_SET);
 #else
-    return fseeko(h->filehandle, offset, SEEK_SET);
+    return FSEEKO(h->filehandle, offset, SEEK_SET);
 #endif
 }
 
@@ -369,7 +378,7 @@ int sdf_free_block_data(sdf_file_t *h, sdf_block_t *b)
             b->data = NULL;
         }
     }
-#ifndef PARALLEL
+#if !defined(PARALLEL) && !defined(_WIN32)
     if (b->mmap) {
         munmap(b->mmap, b->mmap_len);
         b->mmap = NULL;
