@@ -13,9 +13,16 @@
 #include "sdf_input.h"
 #include "sdf_input_point.h"
 #include "sdf_control.h"
+
 #ifndef PARALLEL
-#include <unistd.h>
-#include <sys/mman.h>
+# ifdef _WIN32
+#  include <io.h>
+#  define FSEEKO _fseeki64
+# else
+#  include <unistd.h>
+#  include <sys/mman.h>
+#  define FSEEKO fseeko
+# endif
 #endif
 
 //#define SDF_COMMON_MESH_LENGTH (4 + 8 + h->id_length + 4 * b->ndims)
@@ -164,7 +171,7 @@ static int sdf_helper_read_array(sdf_file_t *h, void **var_in, size_t count)
     sz = SDF_TYPE_SIZES[b->datatype];
     length = count * sz;
 
-#ifndef PARALLEL
+#if !defined(PARALLEL) && !defined(_WIN32)
     if (h->mmap) {
         mlen = sysconf(_SC_PAGESIZE);
         mstart = mlen * (h->current_location / mlen);
@@ -187,7 +194,7 @@ static int sdf_helper_read_array(sdf_file_t *h, void **var_in, size_t count)
     MPI_File_set_view(h->filehandle, 0, MPI_BYTE, MPI_BYTE, "native",
             MPI_INFO_NULL);
 #else
-    fseeko(h->filehandle, h->current_location, SEEK_SET);
+    FSEEKO(h->filehandle, h->current_location, SEEK_SET);
     if (!fread(*var, sz, count, h->filehandle))
         return 1;
 #endif

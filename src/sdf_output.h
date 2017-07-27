@@ -9,6 +9,8 @@
 #ifndef _SDF_OUTPUT_H_
 #define _SDF_OUTPUT_H_
 
+#include <sys/types.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
