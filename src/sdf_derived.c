@@ -795,16 +795,11 @@ static sdf_block_t *sdf_callback_face_grid(sdf_file_t *h, sdf_block_t *b)
 {
     int i, n, sz;
     sdf_block_t *old = b->subblock;
-    sdf_block_t *current_block = h->current_block;
 
     if (b->done_data) return b;
 
-    if (!old->grids) {
-        h->current_block = old;
-        sdf_stack_alloc(h, h->current_block);
-        sdf_read_data(h);
-        h->current_block = current_block;
-    }
+    if (!old->grids)
+        sdf_helper_read_data(h, old);
 
     memcpy(b->local_dims, old->local_dims, 3 * sizeof(*b->local_dims));
 
@@ -812,18 +807,21 @@ static sdf_block_t *sdf_callback_face_grid(sdf_file_t *h, sdf_block_t *b)
         b->ngrids = 3;
         b->grids = calloc(b->ngrids, sizeof(float*));
     }
-    for (i = 0; i < 3; i++) {
-        if (i != b->stagger) {
-            sz = b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
-            b->grids[i] = malloc(sz);
-            memcpy(b->grids[i], old->grids[i], sz);
-        }
-    }
 
     n = b->stagger;
     b->local_dims[n] += 1;
-    sz = b->local_dims[n] * SDF_TYPE_SIZES[b->datatype_out];
-    b->grids[n] = malloc(sz);
+    b->nelements = 0;
+    b->nelements_local = 0;
+    for (i = 0; i < b->ndims; i++) {
+        b->nelements += b->dims[i];
+        b->nelements_local += b->local_dims[i];
+
+        sz = b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
+        b->grids[i] = malloc(sz);
+        if (i != n)
+            memcpy(b->grids[i], old->grids[i], sz);
+    }
+
     if (b->datatype_out == SDF_DATATYPE_REAL8) {
         double *oldx_ptr = (double*)old->grids[n];
         double *newx_ptr = (double*)b->grids[n];
@@ -857,6 +855,7 @@ static sdf_block_t *sdf_callback_face_grid(sdf_file_t *h, sdf_block_t *b)
         x1 = *(oldx_ptr-2);
         *newx_ptr = 0.5 * (3 * x0 - x1);
     }
+
     b->done_data = 1;
 
     return b;
