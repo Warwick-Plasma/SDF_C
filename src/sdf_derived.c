@@ -2089,12 +2089,14 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             }
             for (i=b->ndims; i < 3; i++)
                 append->local_dims[i] = append->dims[i] = 1;
-            append->n_ids = 1;
+            append->n_ids = 2;
             append->variable_ids = calloc(append->n_ids, sizeof(char*));
             append->nvariable_ids = append->n_ids;
             SDF_SET_ENTRY_ID(append->variable_ids[0], b->id);
+            SDF_SET_ENTRY_ID(append->variable_ids[1], mesh->id);
             append->must_read = calloc(append->n_ids, sizeof(char*));
             append->must_read[0] = 1;
+            append->must_read[1] = 1;
             append->populate_data = sdf_callback_cpu_data;
             append->datatype = append->datatype_out = SDF_DATATYPE_INTEGER4;
 
