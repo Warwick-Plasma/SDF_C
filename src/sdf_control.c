@@ -966,7 +966,8 @@ int sdf_block_set_array_section(sdf_block_t *b, const int ndims,
 
     if (b->ndims < 1) return 1;
 
-    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH) {
+    if (b->blocktype == SDF_BLOCKTYPE_PLAIN_MESH
+            || b->blocktype == SDF_BLOCKTYPE_CPU_SPLIT) {
         nelements_local = 0;
         for (i = 0; i < b->ndims; i++)
             nelements_local += b->local_dims[i];
