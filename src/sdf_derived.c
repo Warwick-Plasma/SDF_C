@@ -2022,6 +2022,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
             append->populate_data = sdf_callback_cpu_mesh;
             append->blocktype = SDF_BLOCKTYPE_PLAIN_MESH;
             append->no_internal_ghost = 1;
+            append->datatype_out = mesh->datatype_out;
 
             append->ndims = b->ndims;
             for (i = 0; i < b->ndims; i++) append->dims[i] = b->dims[i] + 2;
