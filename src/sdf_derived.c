@@ -2226,6 +2226,8 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 }
             }
 
+            if (obst->ndims != 3) continue;
+
             for (i = 0; i < b->ndims; i++) {
                 APPEND_BLOCK(append);
                 nappend++;
