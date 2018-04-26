@@ -21,7 +21,7 @@ int sdf_helper_read_data(sdf_file_t *h, sdf_block_t *b)
         sdf_block_t *var;
         if (!b->data) {
             // Free any components which have already been allocated
-            for (int i = 0; i < b->n_ids; i++) {
+            for (i = 0; i < b->n_ids; i++) {
                 if (b->must_read[i]) {
                     var = sdf_find_block_by_id(h, b->variable_ids[i]);
                     // Make sure that contiguous block datatype matches that
@@ -38,7 +38,7 @@ int sdf_helper_read_data(sdf_file_t *h, sdf_block_t *b)
             sdf_stack_alloc(h, b);
         }
 
-        for (int i = 0; i < b->n_ids; i++) {
+        for (i = 0; i < b->n_ids; i++) {
             // Fill in derived components which are not already cached
             if (b->must_read[i]) {
                 var = sdf_find_block_by_id(h, b->variable_ids[i]);
