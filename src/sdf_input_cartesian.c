@@ -370,11 +370,12 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     char *read_ptr = *var_ptr, *read_var = *var_ptr;
     char convert;
     int i, sz;
-    size_t count, length, nelements;
+    size_t count, length;
 #ifdef PARALLEL
     int64_t dims[SDF_MAXDIMS] = {0};
     int64_t starts[SDF_MAXDIMS] = {0};
     int64_t ends[SDF_MAXDIMS] = {1,1,1,1};
+    size_t nelements;
 #else
     size_t mlen, mstart, moff;
     int64_t *offset_starts = NULL, *offset_ends = NULL;
@@ -394,7 +395,9 @@ static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
     } else
         count = b->local_dims[dim];
 
+#ifdef PARALLEL
     nelements = count;
+#endif
 
     if (b->array_starts) {
         if (dim < 0) {
