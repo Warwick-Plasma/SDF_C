@@ -2382,7 +2382,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
 int sdf_add_derived_blocks_final(sdf_file_t *h)
 {
     sdf_block_t *b, *next, *append, *append_head, *append_tail;
-    sdf_block_t *mesh, *old_mesh, *vfm, *obst;
+    sdf_block_t *mesh, *old_mesh, *vfm, *obst = NULL;
     sdf_block_t *first_obst = NULL, *first_mat = NULL, *first_mesh_var = NULL;
     sdf_block_t *current_block = h->current_block;
     int i, n, stagger, dont_add_grid, nd, nappend = 0;
