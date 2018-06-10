@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <assert.h>
 #include <sdf.h>
 #include "sdf_control.h"
 #include "sdf_util.h"
@@ -193,6 +194,9 @@ static int sdf_fopen(sdf_file_t *h, int mode)
 {
     int ret = 0;
 
+    // Abort for invalid mode argument
+    assert(mode&SDF_READ || mode&SDF_WRITE);
+
 #ifdef PARALLEL
     if (mode == SDF_READ)
         ret = MPI_File_open(h->comm, (char*)h->filename, MPI_MODE_RDONLY,
@@ -225,6 +229,9 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 {
     sdf_file_t *h;
     int ret;
+
+    // Abort for invalid mode argument
+    assert(mode&SDF_READ || mode&SDF_WRITE);
 
     // Create filehandle
     h = malloc(sizeof(*h));
