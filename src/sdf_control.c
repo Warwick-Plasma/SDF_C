@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <assert.h>
 #include <sdf.h>
 #include "sdf_control.h"
 #include "sdf_util.h"
@@ -193,6 +194,9 @@ static int sdf_fopen(sdf_file_t *h, int mode)
 {
     int ret = 0;
 
+    // Abort for invalid mode argument
+    assert(mode&SDF_READ || mode&SDF_WRITE);
+
 #ifdef PARALLEL
     if (mode == SDF_READ)
         ret = MPI_File_open(h->comm, (char*)h->filename, MPI_MODE_RDONLY,
@@ -200,17 +204,20 @@ static int sdf_fopen(sdf_file_t *h, int mode)
     else if (mode == SDF_WRITE)
         ret = MPI_File_open(h->comm, (char*)h->filename,
                 MPI_MODE_WRONLY|MPI_MODE_CREATE, MPI_INFO_NULL, &h->filehandle);
-    else
+    else if (mode == (SDF_READ|SDF_WRITE))
         ret = MPI_File_open(h->comm, (char*)h->filename,
                 MPI_MODE_RDWR, MPI_INFO_NULL, &h->filehandle);
-    if (ret) h->filehandle = 0;
+    else
+        h->filehandle = 0;
 #else
     if (mode == SDF_READ)
         h->filehandle = fopen(h->filename, "r");
     else if (mode == SDF_WRITE)
         h->filehandle = fopen(h->filename, "w");
-    else
+    else if (mode == (SDF_READ|SDF_WRITE))
         h->filehandle = fopen(h->filename, "r+");
+    else
+        h->filehandle = NULL;
 #endif
     if (!h->filehandle) ret = 1;
 
@@ -225,6 +232,9 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 {
     sdf_file_t *h;
     int ret;
+
+    // Abort for invalid mode argument
+    assert(mode&SDF_READ || mode&SDF_WRITE);
 
     // Create filehandle
     h = malloc(sizeof(*h));
@@ -278,19 +288,19 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 
     h->array_count = 20;
 
-    if (mode != SDF_READ) return h;
+#ifndef PARALLEL
+    if (h->mmap) {
+        h->fd = fileno(h->filehandle);
+    }
+#endif
+
+    if ((mode&SDF_READ) == 0) return h;
 
     ret = sdf_read_header(h);
     if (ret) {
         h = NULL;
         return h;
     }
-
-#ifndef PARALLEL
-    if (h->mmap) {
-        h->fd = fileno(h->filehandle);
-    }
-#endif
 
     return h;
 }
