@@ -294,7 +294,7 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
     }
 #endif
 
-    if (mode != SDF_READ) return h;
+    if ((mode&SDF_READ) == 0) return h;
 
     ret = sdf_read_header(h);
     if (ret) {
