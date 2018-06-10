@@ -204,17 +204,20 @@ static int sdf_fopen(sdf_file_t *h, int mode)
     else if (mode == SDF_WRITE)
         ret = MPI_File_open(h->comm, (char*)h->filename,
                 MPI_MODE_WRONLY|MPI_MODE_CREATE, MPI_INFO_NULL, &h->filehandle);
-    else
+    else if (mode == (SDF_READ|SDF_WRITE))
         ret = MPI_File_open(h->comm, (char*)h->filename,
                 MPI_MODE_RDWR, MPI_INFO_NULL, &h->filehandle);
-    if (ret) h->filehandle = 0;
+    else
+        h->filehandle = 0;
 #else
     if (mode == SDF_READ)
         h->filehandle = fopen(h->filename, "r");
     else if (mode == SDF_WRITE)
         h->filehandle = fopen(h->filename, "w");
-    else
+    else if (mode == (SDF_READ|SDF_WRITE))
         h->filehandle = fopen(h->filename, "r+");
+    else
+        h->filehandle = NULL;
 #endif
     if (!h->filehandle) ret = 1;
 
