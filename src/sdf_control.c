@@ -278,6 +278,12 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
 
     h->array_count = 20;
 
+#ifndef PARALLEL
+    if (h->mmap) {
+        h->fd = fileno(h->filehandle);
+    }
+#endif
+
     if (mode != SDF_READ) return h;
 
     ret = sdf_read_header(h);
@@ -285,12 +291,6 @@ sdf_file_t *sdf_open(const char *filename, comm_t comm, int mode, int use_mmap)
         h = NULL;
         return h;
     }
-
-#ifndef PARALLEL
-    if (h->mmap) {
-        h->fd = fileno(h->filehandle);
-    }
-#endif
 
     return h;
 }
