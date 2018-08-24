@@ -2385,6 +2385,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
     sdf_block_t *mesh, *old_mesh, *vfm, *obst = NULL;
     sdf_block_t *first_obst = NULL, *first_mat = NULL, *first_mesh_var = NULL;
     sdf_block_t *current_block = h->current_block;
+    sdf_block_t *gb, *sb;
     int i, n, stagger, dont_add_grid, nd, nappend = 0;
     size_t len1, len2;
     char *str, *name1, *name2;
@@ -2559,6 +2560,16 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                     }
                 }
             }
+        } else if (b->blocktype == SDF_BLOCKTYPE_STITCHED && b->stagger > 10) {
+            for (i = 0 ; i < b->ndims ; i++) {
+                gb = sdf_find_block_by_id(h, b->variable_ids[i]);
+                gb->dont_display = 1;
+                for (n = 0 ; n < gb->ndims ; n++) {
+                    sb = sdf_find_block_by_id(h, gb->variable_ids[n]);
+                    sb->dont_display = 1;
+                }
+            }
+
         }
     }
 
