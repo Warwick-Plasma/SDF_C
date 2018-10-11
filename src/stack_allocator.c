@@ -90,14 +90,15 @@ static void stack_free_data_or_grid(stack_handle_t *sh, sdf_block_t *b)
             if (b->mmap) nmin = b->ndims;
 
             for (i = nmin; i < b->ngrids; i++) {
-                free(b->grids[i]);
+                if (b->grids[i])
+                    free(b->grids[i]);
                 sh->memory_size
                         -= b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
                 sh->memory_size -= sizeof(*b->grids);
             }
-            free(b->grids);
+            if (b->grids) free(b->grids);
         } else if (!b->mmap) {
-            free(b->data);
+            if (b->data) free(b->data);
             sh->memory_size
                     -= b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
         }
