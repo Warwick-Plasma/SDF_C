@@ -400,6 +400,8 @@ static sdf_block_t *sdf_callback_boundary_mesh_ob(sdf_file_t *h, sdf_block_t *b)
     b->node_list = faces->data;
     free(faces);
 
+    b->done_data = 1;
+
     return b;
 }
 
@@ -595,6 +597,8 @@ static sdf_block_t *sdf_callback_boundary_mesh(sdf_file_t *h, sdf_block_t *b)
     b->node_list = faces->data;
     free(faces);
 
+    b->done_data = 1;
+
     return b;
 }
 
@@ -770,6 +774,8 @@ static sdf_block_t *sdf_callback_surface_mesh(sdf_file_t *h, sdf_block_t *b)
     b->node_list = faces->data;
     free(faces);
 
+    b->done_data = 1;
+
     return b;
 }
 
@@ -802,6 +808,8 @@ static sdf_block_t *sdf_callback_surface(sdf_file_t *h, sdf_block_t *b)
         memcpy(ptr, dptr + idx * sz, sz);
         ptr += sz;
     }
+
+    b->done_data = 1;
 
     return b;
 }
@@ -984,6 +992,8 @@ static sdf_block_t *sdf_callback_cartesian_grid(sdf_file_t *h, sdf_block_t *b)
             }
         }
     }
+
+    b->done_data = 1;
 
     return b;
 }
