@@ -248,7 +248,7 @@ static int sdf_helper_read_array_halo(sdf_file_t *h, void **var_in)
 
     if (*var_ptr) free(*var_ptr);
     sz = SDF_TYPE_SIZES[b->datatype];
-    *var_ptr = read_var = malloc(count * sz);
+    *var_ptr = read_var = calloc(1, count * sz);
 
 #ifdef PARALLEL
     for (i=0; i < b->ndims; i++) {

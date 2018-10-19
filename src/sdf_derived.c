@@ -312,6 +312,7 @@ static sdf_block_t *sdf_callback_boundary_mesh_ob(sdf_file_t *h, sdf_block_t *b)
     }
 
     b->dims[0] = b->nelements = nelements;
+    if (b->data) free(b->data);
     b->data = malloc(b->ndims * nelements * sizeof(float));
     vertex = (float*)b->data;
     ijk = vertijk->data;
@@ -398,6 +399,8 @@ static sdf_block_t *sdf_callback_boundary_mesh_ob(sdf_file_t *h, sdf_block_t *b)
     vector_truncate(faces);
     b->node_list = faces->data;
     free(faces);
+
+    b->done_data = 1;
 
     return b;
 }
@@ -512,6 +515,7 @@ static sdf_block_t *sdf_callback_boundary_mesh(sdf_file_t *h, sdf_block_t *b)
     }
 
     b->dims[0] = b->nelements = nelements;
+    if (b->data) free(b->data);
     b->data = malloc(b->ndims * nelements * sizeof(float));
     vertex = (float*)b->data;
     ijk = vertijk->data;
@@ -593,6 +597,8 @@ static sdf_block_t *sdf_callback_boundary_mesh(sdf_file_t *h, sdf_block_t *b)
     b->node_list = faces->data;
     free(faces);
 
+    b->done_data = 1;
+
     return b;
 }
 
@@ -648,6 +654,7 @@ static sdf_block_t *sdf_callback_surface_mesh(sdf_file_t *h, sdf_block_t *b)
     }}}
 
     b->dims[0] = b->nelements = nelements;
+    if (b->data) free(b->data);
     b->data = malloc(b->ndims * nelements * sizeof(float));
     vertex = (float*)b->data;
 
@@ -767,6 +774,8 @@ static sdf_block_t *sdf_callback_surface_mesh(sdf_file_t *h, sdf_block_t *b)
     b->node_list = faces->data;
     free(faces);
 
+    b->done_data = 1;
+
     return b;
 }
 
@@ -790,13 +799,17 @@ static sdf_block_t *sdf_callback_surface(sdf_file_t *h, sdf_block_t *b)
     b->nelements_local = mesh->nfaces;
     b->datatype_out = b->subblock->datatype_out;
     sz = SDF_TYPE_SIZES[b->datatype_out];
-    ptr = b->data = malloc(b->nelements_local * sz);
+    if (b->data) free(b->data);
+    b->data = malloc(b->nelements_local * sz);
+    ptr = b->data;
     dptr = b->subblock->data;
     for (i=0; i < b->nelements_local; i++) {
         idx = *indexes++;
         memcpy(ptr, dptr + idx * sz, sz);
         ptr += sz;
     }
+
+    b->done_data = 1;
 
     return b;
 }
@@ -980,6 +993,8 @@ static sdf_block_t *sdf_callback_cartesian_grid(sdf_file_t *h, sdf_block_t *b)
         }
     }
 
+    b->done_data = 1;
+
     return b;
 }
 
@@ -1020,8 +1035,11 @@ static sdf_block_t *sdf_callback_face_grid(sdf_file_t *h, sdf_block_t *b)
         }
 
         sz = b->nelements_local * SDF_TYPE_SIZES[b->datatype_out];
-        for (i = 0; i < b->ndims; i++)
+        for (i = 0; i < b->ndims; i++) {
+            if (b->grids[i])
+                free(b->grids[i]);
             b->grids[i] = malloc(sz);
+        }
 
         nn = malloc(b->ndims * sizeof(nn[0]));
         ii = malloc(b->ndims * sizeof(ii[0]));
@@ -1101,6 +1119,8 @@ static sdf_block_t *sdf_callback_face_grid(sdf_file_t *h, sdf_block_t *b)
         b->nelements_local += b->local_dims[i];
 
         sz = b->local_dims[i] * SDF_TYPE_SIZES[b->datatype_out];
+        if (b->grids[i])
+            free(b->grids[i]);
         b->grids[i] = malloc(sz);
         if (i != n)
             memcpy(b->grids[i], old->grids[i], sz);
@@ -1224,19 +1244,22 @@ static sdf_block_t *sdf_callback_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
                 free(x);
             else
 #endif
+                if (b->grids[n]) free(b->grids[n]);
                 b->grids[n] = x;
                 b->nelements_local *= nx;
         }
         for (n=b->ndims; n < 3; n++) {
             b->local_dims[n] = 1;
-            b->grids[n] = calloc(1, sz);
+            if (!b->grids[n])
+                b->grids[n] = calloc(1, sz);
         }
 
 #ifdef PARALLEL
         if (h->rank) {
             for (n=0; n < 3; n++) {
                 b->local_dims[n] = 1;
-                b->grids[n] = calloc(1, sz);
+                if (!b->grids[n])
+                    b->grids[n] = calloc(1, sz);
             }
             b->nelements_local = 1;
         }
@@ -1309,6 +1332,7 @@ static sdf_block_t *sdf_callback_current_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
             free(x);
         else
 #endif
+        if (b->grids[n]) free(b->grids[n]);
         b->grids[n] = x;
     }
 
@@ -1320,7 +1344,8 @@ static sdf_block_t *sdf_callback_current_cpu_mesh(sdf_file_t *h, sdf_block_t *b)
 
     for (n = nx; n < 3; n++) {
         b->local_dims[n] = 1;
-        b->grids[n] = calloc(1, sz);
+        if (!b->grids[n])
+            b->grids[n] = calloc(1, sz);
     }
 
     b->subblock->nelements_local = b->nelements_local;
@@ -2582,6 +2607,8 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
     } else if (first_mesh_var) {
         obst = first_mesh_var;
         callback = sdf_callback_boundary_mesh;
+    } else {
+        obst = NULL;
     }
 
     if (obst) {

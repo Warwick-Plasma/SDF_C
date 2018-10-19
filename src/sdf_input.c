@@ -250,6 +250,7 @@ int sdf_read_summary(sdf_file_t *h)
 int sdf_purge_duplicates(sdf_file_t *h)
 {
     sdf_block_t *b, *next, *subnext;
+    char *id;
     int pos, i;
 
     // Ensure all blocks have been hashed first
@@ -273,6 +274,11 @@ int sdf_purge_duplicates(sdf_file_t *h)
             pos = strlen(b->id);
             if (pos == h->id_length)
                 pos--;
+
+            id = calloc(pos + 3, 1);
+            strncpy(id, b->id, pos+3);
+            free(b->id);
+            b->id = id;
 
             // Mangle ID by appending an integer. Allow for up to 99
             // duplicated blocks
