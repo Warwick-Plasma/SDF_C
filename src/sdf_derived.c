@@ -816,6 +816,173 @@ static sdf_block_t *sdf_callback_surface(sdf_file_t *h, sdf_block_t *b)
 
 
 
+static sdf_block_t *sdf_callback_average(sdf_file_t *h, sdf_block_t *b)
+{
+    sdf_block_t *sb = b->subblock;
+    sdf_block_t *current_block = h->current_block;
+    int sz, i, j, k, is, js, ks;
+    int nx, ny, nz, nxc, nyc, nzc, xs, ys, zs;
+
+    ny = nz = nyc = nzc = 1;
+    nx = sb->local_dims[0];
+    nxc = b->local_dims[0];
+    if (b->ndims > 1) {
+        ny = sb->local_dims[1];
+        nyc = b->local_dims[1];
+    }
+    if (b->ndims > 2) {
+        nz = sb->local_dims[2];
+        nzc = b->local_dims[2];
+    }
+    b->datatype_out = b->subblock->datatype_out;
+
+    if (!sb->done_data) {
+        h->current_block = sb;
+        sdf_stack_alloc(h, h->current_block);
+        sdf_read_data(h);
+        h->current_block = current_block;
+    }
+
+    if (b->data) free(b->data);
+    sz = SDF_TYPE_SIZES[b->datatype_out];
+    b->data = malloc(b->nelements_local * sz);
+
+    xs = sb->stagger&SDF_STAGGER_FACE_X ? 1 : 0;
+    ys = sb->stagger&SDF_STAGGER_FACE_Y ? 1 : 0;
+    zs = sb->stagger&SDF_STAGGER_FACE_Z ? 1 : 0;
+
+#define IJKc(i,j,k) ((i) + nxc * ((j) + nyc * (k)))
+    if (xs + ys + zs == 1) {
+        if (b->datatype_out == SDF_DATATYPE_REAL8) {
+            double *dat = sb->data;
+            double *res = b->data;
+            for (k=0, ks=zs; k < nzc; k++, ks++) {
+            for (j=0, js=ys; j < nyc; j++, js++) {
+            for (i=0, is=xs; i < nxc; i++, is++) {
+                res[IJKc(i,j,k)] = 0.5 * (dat[IJK(i,j,k)] + dat[IJK(is,js,ks)]);
+            }}}
+        } else {
+            float *dat = sb->data;
+            float *res = b->data;
+            for (k=0, ks=zs; k < nzc; k++, ks++) {
+            for (j=0, js=ys; j < nyc; j++, js++) {
+            for (i=0, is=xs; i < nxc; i++, is++) {
+                res[IJKc(i,j,k)] = 0.5 * (dat[IJK(i,j,k)] + dat[IJK(is,js,ks)]);
+            }}}
+        }
+    } else if (xs == 0) {
+        if (b->datatype_out == SDF_DATATYPE_REAL8) {
+            double *dat = sb->data;
+            double *res = b->data;
+            for (k=0, ks=zs; k < nzc; k++, ks++) {
+            for (j=0, js=ys; j < nyc; j++, js++) {
+            for (i=0; i < nxc; i++) {
+                res[IJKc(i,j,k)] = 0.25 * (dat[IJK(i ,j ,k )] +
+                                           dat[IJK(i ,js,k )] +
+                                           dat[IJK(i ,j ,ks)] +
+                                           dat[IJK(i ,js,ks)]);
+            }}}
+        } else {
+            float *dat = sb->data;
+            float *res = b->data;
+            for (k=0, ks=zs; k < nzc; k++, ks++) {
+            for (j=0, js=ys; j < nyc; j++, js++) {
+            for (i=0; i < nxc; i++) {
+                res[IJKc(i,j,k)] = 0.25 * (dat[IJK(i ,j ,k )] +
+                                           dat[IJK(i ,js,k )] +
+                                           dat[IJK(i ,j ,ks)] +
+                                           dat[IJK(i ,js,ks)]);
+            }}}
+        }
+    } else if (ys == 0) {
+        if (b->datatype_out == SDF_DATATYPE_REAL8) {
+            double *dat = sb->data;
+            double *res = b->data;
+            for (k=0, ks=zs; k < nzc; k++, ks++) {
+            for (j=0; j < nyc; j++) {
+            for (i=0, is=xs; i < nxc; i++, is++) {
+                res[IJKc(i,j,k)] = 0.25 * (dat[IJK(i ,j ,k )] +
+                                           dat[IJK(is,j ,k )] +
+                                           dat[IJK(i ,j ,ks)] +
+                                           dat[IJK(is,j ,ks)]);
+            }}}
+        } else {
+            float *dat = sb->data;
+            float *res = b->data;
+            for (k=0, ks=zs; k < nzc; k++, ks++) {
+            for (j=0; j < nyc; j++) {
+            for (i=0, is=xs; i < nxc; i++, is++) {
+                res[IJKc(i,j,k)] = 0.25 * (dat[IJK(i ,j ,k )] +
+                                           dat[IJK(is,j ,k )] +
+                                           dat[IJK(i ,j ,ks)] +
+                                           dat[IJK(is,j ,ks)]);
+            }}}
+        }
+    } else if (zs == 0) {
+        if (b->datatype_out == SDF_DATATYPE_REAL8) {
+            double *dat = sb->data;
+            double *res = b->data;
+            for (k=0; k < nzc; k++) {
+            for (j=0, js=ys; j < nyc; j++, js++) {
+            for (i=0, is=xs; i < nxc; i++, is++) {
+                res[IJKc(i,j,k)] = 0.25 * (dat[IJK(i ,j ,k )] +
+                                           dat[IJK(is,j ,k )] +
+                                           dat[IJK(i ,js,k )] +
+                                           dat[IJK(is,js,k )]);
+            }}}
+        } else {
+            float *dat = sb->data;
+            float *res = b->data;
+            for (k=0; k < nzc; k++) {
+            for (j=0, js=ys; j < nyc; j++, js++) {
+            for (i=0, is=xs; i < nxc; i++, is++) {
+                res[IJKc(i,j,k)] = 0.25 * (dat[IJK(i ,j ,k )] +
+                                           dat[IJK(is,j ,k )] +
+                                           dat[IJK(i ,js,k )] +
+                                           dat[IJK(is,js,k )]);
+            }}}
+        }
+    } else {
+        if (b->datatype_out == SDF_DATATYPE_REAL8) {
+            double *dat = sb->data;
+            double *res = b->data;
+            for (k=0, ks=zs; k < nzc; k++, ks++) {
+            for (j=0, js=ys; j < nyc; j++, js++) {
+            for (i=0, is=xs; i < nxc; i++, is++) {
+                res[IJKc(i,j,k)] = 0.125 * (dat[IJK(i ,j ,k )] +
+                                            dat[IJK(is,j ,k )] +
+                                            dat[IJK(i ,js,k )] +
+                                            dat[IJK(is,js,k )] +
+                                            dat[IJK(i ,j ,ks)] +
+                                            dat[IJK(is,j ,ks)] +
+                                            dat[IJK(i ,js,ks)] +
+                                            dat[IJK(is,js,ks)]);
+            }}}
+        } else {
+            float *dat = sb->data;
+            float *res = b->data;
+            for (k=0, ks=zs; k < nzc; k++, ks++) {
+            for (j=0, js=ys; j < nyc; j++, js++) {
+            for (i=0, is=xs; i < nxc; i++, is++) {
+                res[IJKc(i,j,k)] = 0.125 * (dat[IJK(i ,j ,k )] +
+                                            dat[IJK(is,j ,k )] +
+                                            dat[IJK(i ,js,k )] +
+                                            dat[IJK(is,js,k )] +
+                                            dat[IJK(i ,j ,ks)] +
+                                            dat[IJK(is,j ,ks)] +
+                                            dat[IJK(i ,js,ks)] +
+                                            dat[IJK(is,js,ks)]);
+            }}}
+        }
+    }
+
+    b->done_data = 1;
+
+    return b;
+}
+
+
+
 static sdf_block_t *sdf_callback_grid_component(sdf_file_t *h, sdf_block_t *b)
 {
     sdf_block_t *mesh = sdf_find_block_by_id(h, b->mesh_id);
@@ -2516,6 +2683,57 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                     }
                     if (dont_add_grid) continue;
 
+                    // Add cell-centred variable
+                    APPEND_BLOCK(append);
+                    nappend++;
+                    append_tail = append;
+
+                    str = strcat_alloc(b->id, "centred");
+                    sdf_unique_id(h, str);
+
+                    SDF_SET_ENTRY_ID(append->id, str);
+                    free(str);
+
+                    str = strcat_alloc(b->name, "centred");
+                    SDF_SET_ENTRY_STRING(append->name, str);
+                    free(str);
+
+                    append->blocktype = SDF_BLOCKTYPE_PLAIN_DERIVED;
+                    append->derived = 1;
+                    append->no_internal_ghost = 1;
+
+                    SDF_SET_ENTRY_ID(append->units, b->units);
+                    SDF_SET_ENTRY_ID(append->mesh_id, b->mesh_id);
+                    append->ndims = b->ndims;
+                    append->subblock = b;
+                    for (n = 0; n < b->ndims; n++) {
+                        append->dims[n] = b->dims[n];
+                        append->local_dims[n] = b->local_dims[n];
+                    }
+                    for (n=b->ndims; n < 3; n++) {
+                        append->dims[n] = 1;
+                        append->local_dims[n] = 1;
+                    }
+                    append->dims[i]--;
+                    append->local_dims[i]--;
+                    append->nelements = 1;
+                    append->nelements_local = 1;
+                    for (n = 0; n < b->ndims; n++) {
+                        append->nelements *= b->dims[n];
+                        append->nelements_local *= b->local_dims[n];
+                    }
+
+                    append->n_ids = 1;
+                    append->variable_ids = calloc(append->n_ids, sizeof(char*));
+                    append->nvariable_ids = append->n_ids;
+                    SDF_SET_ENTRY_ID(append->variable_ids[0], b->id);
+                    append->must_read = calloc(append->n_ids, sizeof(char*));
+                    append->must_read[0] = 1;
+                    append->populate_data = sdf_callback_average;
+                    append->datatype = append->datatype_out = b->datatype;
+
+                    sdf_hash_block(h, append);
+
                     name1 = b->mesh_id;
                     name2 = face_grid_ids[i];
                     len1 = strlen(name1);
@@ -2586,6 +2804,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
                 }
             }
         } else if (b->blocktype == SDF_BLOCKTYPE_STITCHED && b->stagger > 10) {
+            // Hide individual rays from the VisIt menu
             for (i = 0 ; i < b->ndims ; i++) {
                 gb = sdf_find_block_by_id(h, b->variable_ids[i]);
                 gb->dont_display = 1;
