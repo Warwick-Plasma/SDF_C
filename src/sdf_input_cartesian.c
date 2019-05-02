@@ -363,7 +363,7 @@ static int sdf_helper_read_array_halo(sdf_file_t *h, void **var_in)
 
 
 
-static int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
+int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim)
 {
     sdf_block_t *b = h->current_block;
     char **var_ptr = (char**)var_in;

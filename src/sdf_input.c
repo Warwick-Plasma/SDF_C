@@ -1064,37 +1064,14 @@ static int sdf_read_namevalue(sdf_file_t *h)
 static int sdf_read_array(sdf_file_t *h)
 {
     sdf_block_t *b = h->current_block;
-    char *p;
-    int i, n, count;
-    size_t length;
-#ifndef PARALLEL
-    size_t mlen, mstart, moff;
-#endif
+    int n;
 
     if (b->done_data) return 0;
-    if (!b->done_info) sdf_read_array_info(h);
+    if (!b->done_info) sdf_read_plain_variable_info(h);
 
     h->current_location = b->data_location;
 
-    length = SDF_TYPE_SIZES[b->datatype] * b->nelements_local;
-
-#if !defined(PARALLEL) && !defined(_WIN32)
-    if (h->mmap) {
-        mlen = sysconf(_SC_PAGESIZE);
-        mstart = mlen * (h->current_location / mlen);
-        moff = h->current_location - mstart;
-        b->mmap_len = mlen = b->data_length + moff;
-        b->mmap = mmap(NULL, mlen, PROT_READ, MAP_SHARED, h->fd, mstart);
-        b->data = moff + b->mmap;
-    } else
-#endif
-    {
-        if (b->data) free(b->data);
-        b->data = malloc(length);
-        sdf_seek(h);
-        sdf_read_bytes(h, b->data, length);
-        if (h->swap) sdf_convert_array_to_float(h, &b->data, length);
-    }
+    sdf_helper_read_array(h, &b->data, -1);
 
     if (h->print) {
         h->indent = 0;
@@ -1102,27 +1079,7 @@ static int sdf_read_array(sdf_file_t *h)
         SDF_DPRNT("b->name: %s ", b->name);
         for (n=0; n < b->ndims; n++) SDF_DPRNT("%" PRIi64 " ",b->local_dims[n]);
         SDF_DPRNT("\n  ");
-        if (b->datatype_out == SDF_DATATYPE_CHARACTER) {
-            p = b->data;
-            for (n=0; n < b->local_dims[1]; n++) {
-                p = (char*)b->data + n * b->local_dims[0];
-                count = 0;
-                for (i=0; i < b->local_dims[0]; i++) {
-                    if (*p == '\0') break;
-                    if (*p != ' ') count++;
-                    p++;
-                }
-                SDF_DPRNT("c*%" PRIi64 "[%i] ", b->local_dims[0], n);
-                p = (char*)b->data + n * b->local_dims[0];
-                for (i=0; i < count; i++) {
-                    SDF_DPRNT("%c", *p);
-                    p++;
-                }
-                SDF_DPRNT("\n  ");
-            }
-        } else {
-            SDF_DPRNTar(b->data, b->nelements_local);
-        }
+        SDF_DPRNTar(b->data, b->nelements_local);
     }
 
     b->done_data = 1;
