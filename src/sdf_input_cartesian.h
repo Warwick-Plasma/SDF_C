@@ -18,6 +18,7 @@ int sdf_read_plain_mesh_info(sdf_file_t *h);
 int sdf_read_lagran_mesh(sdf_file_t *h);
 int sdf_read_plain_variable(sdf_file_t *h);
 int sdf_read_plain_variable_info(sdf_file_t *h);
+int64_t sdf_helper_read_array(sdf_file_t *h, void **var_in, int dim);
 
 #ifdef __cplusplus
 }
