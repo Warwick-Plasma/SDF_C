@@ -12,15 +12,42 @@ set(SOURCES
    sdf_modify.c sdf_output.c sdf_util.c stack_allocator.c commit_info.h
    )
 
-if(NOT TARGET sdfc)
-   add_library(sdfc STATIC ${SOURCES})
-   if(PARALLEL)
-       set_source_files_properties(
-           ${SOURCES}
-           PROPERTIES COMPILE_FLAGS "${MPI_C_COMPILE_FLAGS}")
-   endif()
+add_library(sdfc STATIC ${SOURCES})
+if(PARALLEL)
+   set_source_files_properties(
+       ${SOURCES}
+       PROPERTIES COMPILE_FLAGS "${MPI_C_COMPILE_FLAGS}")
 endif()
+target_include_directories(
+    sdfc
+    INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+)
 
-execute_process(COMMAND sh gen_commit_string.sh
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-install(TARGETS sdfc DESTINATION lib COMPONENT develop)
+execute_process(
+    COMMAND sh gen_commit_string.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+install(
+    TARGETS sdfc
+    EXPORT SDFCConfig
+    COMPONENT develop
+    LIBRARY DESTINATION lib
+    INCLUDES DESTINATION include
+)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/SDFCConfigVersion.cmake
+    VERSION ${SDFC_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/SDFCConfigVersion.cmake
+    DESTINATION lib/SDFC
+    COMPONENT develop
+)
+
+export(TARGETS sdfc FILE ${CMAKE_CURRENT_BINARY_DIR}/SDFCConfig.cmake)
+install(EXPORT SDFCConfig DESTINATION lib/SDFC COMPONENT develop)
