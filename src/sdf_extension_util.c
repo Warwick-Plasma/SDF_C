@@ -22,6 +22,7 @@
 static void *sdf_global_extension = NULL;
 static void *sdf_global_extension_dlhandle = NULL;
 static int   sdf_global_extension_failed = 0;
+static int   sdf_global_extension_refcount = 0;
 
 int sdf_purge_duplicates(sdf_file_t *h);
 
@@ -44,6 +45,8 @@ void *sdf_extension_load(sdf_file_t *h)
         h->error_message = "sdf_extension_load: failed to load extension.";
         return NULL;
     }
+
+    sdf_global_extension_refcount++;
 
     if (sdf_global_extension) return sdf_global_extension;
 
@@ -84,6 +87,7 @@ void *sdf_extension_load(sdf_file_t *h)
     if (!sdf_global_extension_dlhandle) {
         sdf_global_extension_failed = 1;
         h->error_message = dlerror();
+        sdf_global_extension_refcount--;
         return NULL;
     }
 
@@ -107,6 +111,8 @@ void sdf_extension_unload(void)
     if (!sdf_global_extension_dlhandle) return;
 
     if (sdf_global_extension) {
+        sdf_global_extension_refcount--;
+        if (sdf_global_extension_refcount > 0) return;
         // Weird pointer copying required by ISO C
         p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_destroy");
         memcpy(&sdf_extension_destroy, &p, sizeof(p));
