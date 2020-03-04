@@ -1974,6 +1974,20 @@ static void add_station_variables(sdf_file_t *h, sdf_block_t **append,
 
 
 
+/* hash: compute hash value of string */
+static unsigned int hash(char *str)
+{
+   unsigned int h;
+   unsigned char *p;
+
+   h = 0;
+   for (p = (unsigned char*)str; *p != '\0'; p++)
+      h = 37 * h + *p;
+   return h; // or, h % ARRAY_SIZE;
+}
+
+
+
 static void add_global_station(sdf_file_t *h, sdf_block_t **append,
         sdf_block_t **append_tail, int *nappend)
 {
@@ -1983,6 +1997,7 @@ static void add_global_station(sdf_file_t *h, sdf_block_t **append,
     int nidx; // variable index for new block
     int bidx; // variable index for current station block
     int *extra_id;
+    unsigned int *hash_list, hash_entry;
     char found, *found_id, *ctmp;
     list_t *station_blocks;
 
@@ -2010,6 +2025,23 @@ static void add_global_station(sdf_file_t *h, sdf_block_t **append,
         h->current_block = b = next;
         next = b->next;
         if (b->blocktype != SDF_BLOCKTYPE_STATION) continue;
+
+        // Sanity check. List of station_ids must be unique
+        // First build list of hashes for speed of comparison
+        hash_list = malloc(b->nstations * sizeof(unsigned int));
+        for (n = 0; n < b->nstations; n++) {
+            hash_entry = hash(b->station_ids[n]);
+            hash_list[n] = hash_entry;
+            for (m = 0; m < n; m++) {
+                if (hash_entry == hash_list[m]) {
+                    fprintf(stderr, "*** ERROR ***\n");
+                    fprintf(stderr, "Duplicate station id found: "
+                            "%s in block %s\n", b->station_ids[n], b->id);
+                    exit(1);
+                }
+            }
+        }
+        free(hash_list);
 
         nelements += b->nelements;
         list_append(station_blocks, b);
