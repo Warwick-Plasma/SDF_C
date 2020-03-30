@@ -12,7 +12,7 @@
 #include "sdf.h"
 
 #define SDF_EXTENSION_VERSION  1
-#define SDF_EXTENSION_REVISION 0
+#define SDF_EXTENSION_REVISION 1
 
 typedef struct derived_template_struct derived_template_t;
 typedef struct sdf_extension_struct sdf_extension_t;
@@ -24,6 +24,9 @@ struct sdf_extension_struct {
     void (*get_version)(sdf_extension_t *, int *major, int *minor);
     char *(*get_name)(sdf_extension_t *);
     char **(*preload)(sdf_extension_t *, sdf_file_t *);
+    char *(*get_commit_id)(sdf_extension_t *);
+    char *(*get_commit_date)(sdf_extension_t *);
+    char *(*get_info)(sdf_extension_t *);
 };
 
 typedef sdf_extension_t *sdf_extension_create_t(sdf_file_t *h);

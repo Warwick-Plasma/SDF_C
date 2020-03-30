@@ -241,21 +241,73 @@ int sdf_read_blocklist_all(sdf_file_t *h)
 }
 
 
-void sdf_extension_print_version(sdf_file_t *h)
+char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
 {
-    int major, minor;
     sdf_extension_t *ext;
+    char *info;
 
     // Retrieve the extended interface library from the plugin manager
     sdf_extension_load(h);
     ext = sdf_global_extension;
+    info = NULL;
 
     if (ext) {
-        ext->get_version(ext, &major, &minor);
-        printf("Loaded extension: %s-%d.%d\n", ext->get_name(ext), major, minor);
+        info = ext->get_info(ext);
+        if (prefix) {
+            int ilen = strlen(info);
+            int plen = strlen(prefix);
+            int i, rlen, len, count = 1;
+            char *c, *ptr, *oldinfo = info;
+
+            for (i=0, c=oldinfo; i < ilen; i++, c++) {
+                if (*c == '\n')
+                    count++;
+            }
+            len = ilen + count * plen + 1;
+            ptr = info = calloc(1, len);
+
+            memcpy(ptr, prefix, plen);
+            ptr += plen;
+            for (i=0, c=oldinfo, rlen=0; i < ilen; i++, c++, rlen++) {
+                if (*c == '\n') {
+                    rlen++;
+                    memcpy(ptr, oldinfo, rlen);
+                    ptr += rlen;
+                    oldinfo += rlen;
+                    rlen = -1;
+                    memcpy(ptr, prefix, plen);
+                    ptr += plen;
+                }
+            }
+            memcpy(ptr, oldinfo, rlen);
+        }
     } else {
-        printf("No extension loaded\n");
+        if (sdf_global_extension_failed) {
+            if (prefix) {
+                int l1, l2;
+                l1 = strlen(prefix);
+                l2 = strlen(h->error_message) + l1 + 1;
+                info = malloc(l2);
+                memcpy(info, prefix, l1);
+                strncat(info, h->error_message, l2);
+            } else {
+                info = strdup(h->error_message);
+            }
+        }
+    }
+
+    return info;
+}
+
+
+void sdf_extension_print_version(sdf_file_t *h)
+{
+    char *info = sdf_extension_get_info_string(h, NULL);
+
+    if (info) {
         if (sdf_global_extension_failed)
-            printf("%s\n", h->error_message);
+            printf("No extension loaded\n");
+        printf("%s\n", info);
+        free(info);
     }
 }

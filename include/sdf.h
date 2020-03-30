@@ -787,6 +787,12 @@ int sdf_has_debug_info(void);
 
 
 /**
+ @brief Get string with the name and version of any loaded extension modules
+ */
+char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix);
+
+
+/**
  @brief Prints the name and version of any loaded extension modules
  */
 void sdf_extension_print_version(sdf_file_t *h);
