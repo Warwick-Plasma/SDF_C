@@ -50,5 +50,5 @@ if [ $? -eq 0 ]; then
 else
   echo "#define SDF_COMMIT_ID \"$commit_string\"" > $COMMIT_FILE
   echo "#define SDF_COMMIT_DATE \"$commit_date\"" >> $COMMIT_FILE
-  exit 1
+  exit
 fi
