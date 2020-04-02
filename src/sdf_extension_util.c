@@ -296,7 +296,9 @@ int sdf_read_blocklist_all(sdf_file_t *h)
 char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
 {
     sdf_extension_t *ext;
-    char *info;
+    static char *info = NULL;
+
+    if (info) return info;
 
     // Retrieve the extended interface library from the plugin manager
     sdf_extension_load(h);
@@ -324,7 +326,6 @@ char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
         ptr++;
         memcpy(ptr, oldinfo, ilen);
         ptr += ilen;
-        free(oldinfo);
 
         if (prefix) {
             int i, count = 1;
@@ -355,6 +356,7 @@ char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
                 }
             }
             memcpy(ptr, oldinfo, rlen);
+            free(oldinfo);
         }
     } else {
         if (sdf_global_extension_failed) {
@@ -383,6 +385,5 @@ void sdf_extension_print_version(sdf_file_t *h)
         if (sdf_global_extension_failed)
             printf("No extension loaded\n");
         printf("%s\n", info);
-        free(info);
     }
 }
