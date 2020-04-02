@@ -7,6 +7,7 @@
  */
 
 #ifdef __APPLE__
+#  define _DARWIN_C_SOURCE
 #  include <mach-o/dyld.h>
 #else // Linux
 #  define _GNU_SOURCE
