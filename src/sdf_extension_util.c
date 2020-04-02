@@ -6,6 +6,14 @@
  * See the LICENSE file for details.
  */
 
+#ifdef __APPLE__
+#  define _DARWIN_C_SOURCE
+#  include <mach-o/dyld.h>
+#else // Linux
+#  define _GNU_SOURCE
+#  include <link.h>
+#endif
+#include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -23,8 +31,44 @@ static void *sdf_global_extension = NULL;
 static void *sdf_global_extension_dlhandle = NULL;
 static int   sdf_global_extension_failed = 0;
 static int   sdf_global_extension_refcount = 0;
+static char *sdf_global_extension_path = NULL;
 
 int sdf_purge_duplicates(sdf_file_t *h);
+
+
+static const char *dlpath(void *handle)
+{
+    const char *path = NULL;
+
+#ifdef __APPLE__
+    for (int32_t i = _dyld_image_count(); i >= 0 ; i--) {
+
+        bool found = FALSE;
+        const char *probe_path = _dyld_get_image_name(i);
+        void *probe_handle = dlopen(probe_path,
+                                    RTLD_NOW | RTLD_LOCAL | RTLD_NOLOAD);
+
+        if (handle == probe_handle) {
+            found = TRUE;
+            path = probe_path;
+        }
+
+        dlclose(probe_handle);
+
+        if (found)
+            break;
+    }
+#else // Linux
+    struct link_map *map;
+    dlinfo(handle, RTLD_DI_LINKMAP, &map);
+
+    if (map)
+        path = map->l_name;
+#endif
+
+    return path;
+}
+
 
 void *sdf_extension_load(sdf_file_t *h)
 {
@@ -97,8 +141,16 @@ void *sdf_extension_load(sdf_file_t *h)
 
     sdf_global_extension = sdf_extension_create(h);
 
+    sdf_global_extension_path = strdup(dlpath(sdf_global_extension_dlhandle));
+
     return sdf_global_extension;
 #endif
+}
+
+
+char *sdf_extension_path(void)
+{
+    return sdf_global_extension_path;
 }
 
 
@@ -241,21 +293,96 @@ int sdf_read_blocklist_all(sdf_file_t *h)
 }
 
 
-void sdf_extension_print_version(sdf_file_t *h)
+char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
 {
-    int major, minor;
     sdf_extension_t *ext;
+    char *info;
 
     // Retrieve the extended interface library from the plugin manager
     sdf_extension_load(h);
     ext = sdf_global_extension;
+    info = NULL;
 
     if (ext) {
-        ext->get_version(ext, &major, &minor);
-        printf("Loaded extension: %s-%d.%d\n", ext->get_name(ext), major, minor);
+        int ilen, plen, rlen, len;
+        char *ptr, *oldinfo;
+        static char const *pstr = "Extension path: ";
+
+        oldinfo = ext->get_info(ext);
+        ilen = strlen(oldinfo);
+        plen = strlen(pstr);
+        rlen = strlen(sdf_global_extension_path);
+
+        len = ilen + plen + rlen + 2;
+        ptr = info = malloc(len);
+
+        memcpy(ptr, pstr, ilen);
+        ptr += plen;
+        memcpy(ptr, sdf_global_extension_path, rlen);
+        ptr += rlen;
+        *ptr = '\n';
+        ptr++;
+        memcpy(ptr, oldinfo, ilen);
+        ptr += ilen;
+        free(oldinfo);
+
+        if (prefix) {
+            int i, count = 1;
+            char *c;
+
+            ilen = strlen(info);
+            plen = strlen(prefix);
+            oldinfo = info;
+
+            for (i=0, c=oldinfo; i < ilen; i++, c++) {
+                if (*c == '\n')
+                    count++;
+            }
+            len = ilen + count * plen + 1;
+            ptr = info = calloc(1, len);
+
+            memcpy(ptr, prefix, plen);
+            ptr += plen;
+            for (i=0, c=oldinfo, rlen=0; i < ilen; i++, c++, rlen++) {
+                if (*c == '\n') {
+                    rlen++;
+                    memcpy(ptr, oldinfo, rlen);
+                    ptr += rlen;
+                    oldinfo += rlen;
+                    rlen = -1;
+                    memcpy(ptr, prefix, plen);
+                    ptr += plen;
+                }
+            }
+            memcpy(ptr, oldinfo, rlen);
+        }
     } else {
-        printf("No extension loaded\n");
+        if (sdf_global_extension_failed) {
+            if (prefix) {
+                int l1, l2;
+                l1 = strlen(prefix);
+                l2 = strlen(h->error_message) + l1 + 1;
+                info = malloc(l2);
+                memcpy(info, prefix, l1);
+                strncat(info, h->error_message, l2);
+            } else {
+                info = strdup(h->error_message);
+            }
+        }
+    }
+
+    return info;
+}
+
+
+void sdf_extension_print_version(sdf_file_t *h)
+{
+    char *info = sdf_extension_get_info_string(h, NULL);
+
+    if (info) {
         if (sdf_global_extension_failed)
-            printf("%s\n", h->error_message);
+            printf("No extension loaded\n");
+        printf("%s\n", info);
+        free(info);
     }
 }
