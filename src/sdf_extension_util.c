@@ -293,7 +293,7 @@ int sdf_read_blocklist_all(sdf_file_t *h)
 }
 
 
-char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
+static char *get_info_string(sdf_file_t *h)
 {
     sdf_extension_t *ext;
     static char *info = NULL;
@@ -326,51 +326,60 @@ char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
         ptr++;
         memcpy(ptr, oldinfo, ilen);
         ptr += ilen;
-
-        if (prefix) {
-            int i, count = 1;
-            char *c;
-
-            ilen = strlen(info);
-            plen = strlen(prefix);
-            oldinfo = info;
-
-            for (i=0, c=oldinfo; i < ilen; i++, c++) {
-                if (*c == '\n')
-                    count++;
-            }
-            len = ilen + count * plen + 1;
-            ptr = info = calloc(1, len);
-
-            memcpy(ptr, prefix, plen);
-            ptr += plen;
-            for (i=0, c=oldinfo, rlen=0; i < ilen; i++, c++, rlen++) {
-                if (*c == '\n') {
-                    rlen++;
-                    memcpy(ptr, oldinfo, rlen);
-                    ptr += rlen;
-                    oldinfo += rlen;
-                    rlen = -1;
-                    memcpy(ptr, prefix, plen);
-                    ptr += plen;
-                }
-            }
-            memcpy(ptr, oldinfo, rlen);
-            free(oldinfo);
-        }
     } else {
         if (sdf_global_extension_failed) {
-            if (prefix) {
-                int l1, l2;
-                l1 = strlen(prefix);
-                l2 = strlen(h->error_message) + l1 + 1;
-                info = malloc(l2);
-                memcpy(info, prefix, l1);
-                strncat(info, h->error_message, l2);
-            } else {
-                info = strdup(h->error_message);
+            info = strdup(h->error_message);
+        }
+    }
+
+    return info;
+}
+
+
+char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
+{
+    sdf_extension_t *ext;
+    static char *info = NULL;
+    static char *old_prefix = NULL;
+    char *info_base;
+
+    if (info && old_prefix == prefix) return info;
+
+    info_base = get_info_string(h);
+    old_prefix = (char*)prefix;
+
+    if (prefix) {
+        int ilen, plen, rlen, len, i, count = 1;
+        char *c, *ptr;
+
+        if (info && info != info_base) free(info);
+
+        ilen = strlen(info_base);
+        plen = strlen(prefix);
+
+        for (i=0, c=info_base; i < ilen; i++, c++) {
+            if (*c == '\n')
+                count++;
+        }
+        len = ilen + count * plen + 1;
+        ptr = info = calloc(1, len);
+
+        memcpy(ptr, prefix, plen);
+        ptr += plen;
+        for (i=0, c=info_base, rlen=0; i < ilen; i++, c++, rlen++) {
+            if (*c == '\n') {
+                rlen++;
+                memcpy(ptr, info_base, rlen);
+                ptr += rlen;
+                info_base += rlen;
+                rlen = -1;
+                memcpy(ptr, prefix, plen);
+                ptr += plen;
             }
         }
+        memcpy(ptr, info_base, rlen);
+    } else {
+        info = info_base;
     }
 
     return info;
