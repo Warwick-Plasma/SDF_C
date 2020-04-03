@@ -329,11 +329,11 @@ char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
 
         if (prefix) {
             int i, count = 1;
-            char *c;
+            char *c, *oldptr;
 
             ilen = strlen(info);
             plen = strlen(prefix);
-            oldinfo = info;
+            oldptr = oldinfo = info;
 
             for (i=0, c=oldinfo; i < ilen; i++, c++) {
                 if (*c == '\n')
@@ -347,15 +347,15 @@ char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
             for (i=0, c=oldinfo, rlen=0; i < ilen; i++, c++, rlen++) {
                 if (*c == '\n') {
                     rlen++;
-                    memcpy(ptr, oldinfo, rlen);
+                    memcpy(ptr, oldptr, rlen);
                     ptr += rlen;
-                    oldinfo += rlen;
+                    oldptr += rlen;
                     rlen = -1;
                     memcpy(ptr, prefix, plen);
                     ptr += plen;
                 }
             }
-            memcpy(ptr, oldinfo, rlen);
+            memcpy(ptr, oldptr, rlen);
             free(oldinfo);
         }
     } else {
