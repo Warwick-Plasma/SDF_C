@@ -1061,6 +1061,20 @@ static int sdf_read_namevalue(sdf_file_t *h)
 
 
 
+static int sdf_free_distribution(sdf_file_t *h)
+{
+#ifdef PARALLEL
+    sdf_block_t *b = h->current_block;
+
+    if (b->ng) return 0;
+
+    MPI_Type_free(&b->distribution);
+#endif
+    return 0;
+}
+
+
+
 static int sdf_read_array(sdf_file_t *h)
 {
     sdf_block_t *b = h->current_block;
@@ -1071,7 +1085,11 @@ static int sdf_read_array(sdf_file_t *h)
 
     h->current_location = b->data_location;
 
+    sdf_array_datatype(h);
+
     sdf_helper_read_array(h, &b->data, -1);
+
+    sdf_free_distribution(h);
 
     if (h->print) {
         h->indent = 0;
