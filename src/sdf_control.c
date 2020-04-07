@@ -1069,13 +1069,13 @@ int sdf_block_set_array_section(sdf_block_t *b, const int ndims,
 
 char *sdf_get_library_commit_id(void)
 {
-    return strdup(SDF_COMMIT_ID);
+    return SDF_COMMIT_ID;
 }
 
 
 char *sdf_get_library_commit_date(void)
 {
-    return strdup(SDF_COMMIT_DATE);
+    return SDF_COMMIT_DATE;
 }
 
 

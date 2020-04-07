@@ -32,6 +32,8 @@ static void *sdf_global_extension_dlhandle = NULL;
 static int   sdf_global_extension_failed = 0;
 static int   sdf_global_extension_refcount = 0;
 static char *sdf_global_extension_path = NULL;
+static char *info_string = NULL;
+static char *full_info_string = NULL;
 
 int sdf_purge_duplicates(sdf_file_t *h);
 
@@ -181,6 +183,13 @@ void sdf_extension_unload(void)
     sdf_global_extension = NULL;
     sdf_global_extension_failed = 0;
 
+    if (sdf_global_extension_path) free(sdf_global_extension_path);
+    if (info_string) free(info_string);
+    if (full_info_string) free(full_info_string);
+    sdf_global_extension_path = NULL;
+    info_string = NULL;
+    full_info_string = NULL;
+
     return;
 #endif
 }
@@ -296,14 +305,13 @@ int sdf_read_blocklist_all(sdf_file_t *h)
 static char *get_info_string(sdf_file_t *h)
 {
     sdf_extension_t *ext;
-    static char *info = NULL;
 
-    if (info) return info;
+    if (info_string) return info_string;
 
     // Retrieve the extended interface library from the plugin manager
     sdf_extension_load(h);
     ext = sdf_global_extension;
-    info = NULL;
+    info_string = NULL;
 
     if (ext) {
         int ilen, plen, rlen, len;
@@ -316,7 +324,7 @@ static char *get_info_string(sdf_file_t *h)
         rlen = strlen(sdf_global_extension_path);
 
         len = ilen + plen + rlen + 2;
-        ptr = info = malloc(len);
+        ptr = info_string = calloc(1, len);
 
         memcpy(ptr, pstr, ilen);
         ptr += plen;
@@ -328,22 +336,20 @@ static char *get_info_string(sdf_file_t *h)
         ptr += ilen;
     } else {
         if (sdf_global_extension_failed) {
-            info = strdup(h->error_message);
+            info_string = strdup(h->error_message);
         }
     }
 
-    return info;
+    return info_string;
 }
 
 
 char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
 {
-    sdf_extension_t *ext;
-    static char *info = NULL;
     static char *old_prefix = NULL;
     char *info_base;
 
-    if (info && old_prefix == prefix) return info;
+    if (full_info_string && old_prefix == prefix) return full_info_string;
 
     info_base = get_info_string(h);
     old_prefix = (char*)prefix;
@@ -352,7 +358,8 @@ char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
         int ilen, plen, rlen, len, i, count = 1;
         char *c, *ptr;
 
-        if (info && info != info_base) free(info);
+        if (full_info_string && full_info_string != info_base)
+            free(full_info_string);
 
         ilen = strlen(info_base);
         plen = strlen(prefix);
@@ -362,7 +369,7 @@ char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
                 count++;
         }
         len = ilen + count * plen + 1;
-        ptr = info = calloc(1, len);
+        ptr = full_info_string = calloc(1, len);
 
         memcpy(ptr, prefix, plen);
         ptr += plen;
@@ -379,10 +386,10 @@ char *sdf_extension_get_info_string(sdf_file_t *h, char const *prefix)
         }
         memcpy(ptr, info_base, rlen);
     } else {
-        info = info_base;
+        full_info_string = strdup(info_base);
     }
 
-    return info;
+    return full_info_string;
 }
 
 
