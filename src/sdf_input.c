@@ -860,25 +860,15 @@ static int sdf_array_datatype(sdf_file_t *h)
     sdf_block_t *b = h->current_block;
     int n;
 
-#ifdef PARALLEL
-    int sizes[SDF_MAXDIMS], subsizes[SDF_MAXDIMS];
-    for (n=0; n < b->ndims; n++) {
-        sizes[n] = (int)b->dims[n];
-        subsizes[n] = (int)b->local_dims[n];
-    }
-
-    sdf_factor(h);
-
-    MPI_Type_create_subarray(b->ndims, sizes, subsizes, b->starts,
-            MPI_ORDER_FORTRAN, b->mpitype, &b->distribution);
-    MPI_Type_commit(&b->distribution);
-#else
     for (n=0; n < b->ndims; n++) b->local_dims[n] = b->dims[n];
-#endif
     for (n=b->ndims; n < 3; n++) b->local_dims[n] = 1;
 
     b->nelements_local = 1;
     for (n=0; n < b->ndims; n++) b->nelements_local *= b->local_dims[n];
+#ifdef PARALLEL
+    MPI_Type_contiguous(b->nelements_local, b->mpitype, &b->distribution);
+    MPI_Type_commit(&b->distribution);
+#endif
 
     return 0;
 }
