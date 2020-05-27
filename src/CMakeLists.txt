@@ -9,10 +9,10 @@ endif()
 set(SOURCES
    sdf_control.c sdf_derived.c sdf_extension_util.c sdf_helper.c
    sdf_input.c sdf_input_cartesian.c sdf_input_point.c sdf_input_station.c
-   sdf_modify.c sdf_output.c sdf_util.c stack_allocator.c commit_info.h
+   sdf_modify.c sdf_output.c sdf_util.c stack_allocator.c
    )
 
-add_library(sdfc STATIC ${SOURCES})
+add_library(sdfc STATIC ${SOURCES} commit_info.h)
 if(PARALLEL)
    set_source_files_properties(
        ${SOURCES}
@@ -24,10 +24,11 @@ target_include_directories(
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 )
 
-execute_process(
-    COMMAND sh gen_commit_string.sh
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/commit_info.h
+   COMMAND sh gen_commit_string.sh ${CMAKE_CURRENT_BINARY_DIR}
+   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(
     TARGETS sdfc
