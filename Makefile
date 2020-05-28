@@ -74,7 +74,7 @@ FORCE:
 	$(CC) -c $(CFLAGS) -o $(OBJDIR)/$@ $<
 
 commit_info.h: FORCE
-	@cd $(SRCDIR) && sh gen_commit_string.sh || true
+	@cd $(SRCDIR) && sh gen_commit_string.sh . || true
 
 $(LIB): $(OBJS)
 	$(RM) -f $@

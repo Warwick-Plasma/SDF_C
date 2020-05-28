@@ -11,7 +11,9 @@
 # If any of these fields is unavailable then the tag 'unknown' will be
 # used. If none of the tags are known then the COMMIT file is left untouched
 
-COMMIT_FILE=commit_info.h
+COMMIT_FILE_BASE=commit_info.h
+OUTDIR=$1
+COMMIT_FILE=$OUTDIR/$COMMIT_FILE_BASE
 
 LF='
 '
@@ -36,6 +38,7 @@ if [ $? -eq 0 ]; then
   commit_date=$(git log --pretty=format:%cd -1 HEAD)
 else
 # not in a git repo
+  [[ $COMMIT_FILE_BASE -nt $COMMIT_FILE ]] && cp $COMMIT_FILE_BASE $COMMIT_FILE
   grep "SDF_COMMIT_ID" $COMMIT_FILE > /dev/null 2>&1
   [ $? -eq 0 ] && exit
   commit_string=unknown-unknown-unknown-unknown
