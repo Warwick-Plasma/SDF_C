@@ -151,21 +151,19 @@ static int sdf_create_1d_distribution(sdf_file_t *h, int global, int local,
 {
 #ifdef PARALLEL
     sdf_block_t *b = h->current_block;
-    int lengths[3];
-    MPI_Aint disp[3];
-    MPI_Datatype types[3];
+    int size, blocklengths[1];
+    MPI_Aint displacements[1];
+    MPI_Datatype typ;
 
-    lengths[0] = 1;
-    lengths[1] = local;
-    lengths[2] = 1;
-    disp[0] = 0;
-    disp[1] = start * SDF_TYPE_SIZES[b->datatype];
-    disp[2] = global * SDF_TYPE_SIZES[b->datatype];
-    types[0] = MPI_LB;
-    types[1] = b->mpitype;
-    types[2] = MPI_UB;
+    MPI_Type_size(b->mpitype, &size);
 
-    MPI_Type_create_struct(3, lengths, disp, types, &b->distribution);
+    blocklengths[0] = global;
+    displacements[0] = start * size;
+
+    MPI_Type_create_hindexed(1, blocklengths, displacements, b->mpitype, &typ);
+
+    b->distribution = 0;
+    MPI_Type_create_resized(typ, 0, displacements[0], &b->distribution);
     MPI_Type_commit(&b->distribution);
 #endif
     return 0;
