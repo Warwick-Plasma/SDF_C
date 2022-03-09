@@ -9,7 +9,9 @@
 #ifdef __APPLE__
 #  define _DARWIN_C_SOURCE
 #  include <mach-o/dyld.h>
-#elif !defined(_WIN32) && !defined(__CYGWIN__) // Linux
+#elif defined(_WIN32) || defined(__CYGWIN__)
+#  include <windows.h>
+#else // Linux
 #  define _GNU_SOURCE
 #  include <link.h>
 #endif
@@ -21,9 +23,16 @@
 #include <sdf_derived.h>
 #include <sdf.h>
 
-#if !defined(_WIN32) && !defined(__CYGWIN__) // Linux
-# include <unistd.h>
-# include <dlfcn.h>
+#if defined(_WIN32) || defined(__CYGWIN__)
+#  define LIBLOAD(fname) LoadLibraryA((fname))
+#  define LIBFUNC(lib, fn) GetProcAddress((lib), (fn))
+#  define LIBCLOSE(lib) FreeLibrary((lib))
+#else
+#  include <unistd.h>
+#  include <dlfcn.h>
+#  define LIBLOAD(fname) dlopen((fname), RTLD_LAZY)
+#  define LIBFUNC(lib, fn) dlsym((lib), (fn))
+#  define LIBCLOSE(lib) dlclose((lib))
 #endif
 
 static void *sdf_global_extension = NULL;
@@ -54,12 +63,17 @@ static const char *dlpath(void *handle)
             path = probe_path;
         }
 
-        dlclose(probe_handle);
+        LIBCLOSE(probe_handle);
 
         if (found)
             break;
     }
-#elif !defined(_WIN32) && !defined(__CYGWIN__) // Linux
+#elif defined(_WIN32) || defined(__CYGWIN__)
+    char fname[512];
+    DWORD ret;
+    ret = GetModuleFileNameA(handle, fname, sizeof(fname));
+    path = strdup(fname);
+#else // Linux
     struct link_map *map;
     dlinfo(handle, RTLD_DI_LINKMAP, &map);
 
@@ -73,13 +87,13 @@ static const char *dlpath(void *handle)
 
 void *sdf_extension_load(sdf_file_t *h)
 {
-#if !defined(_WIN32) && !defined(__CYGWIN__)
     sdf_extension_create_t *sdf_extension_create;
     void *p;
     char *libname1 = "sdf_extension.so";
     char *libname2 = "libsdf_extension.so";
     char *path_env, *pathname, *path;
     char *sep = ":;,";
+    char error_buffer[256];
     int len;
     struct stat sb;
 
@@ -110,13 +124,13 @@ void *sdf_extension_load(sdf_file_t *h)
             stat(path, &sb);
             if (S_ISDIR(sb.st_mode)) {
                 snprintf(pathname, len, "%s/%s", path, libname1);
-                sdf_global_extension_dlhandle = dlopen(pathname, RTLD_LAZY);
+                sdf_global_extension_dlhandle = LIBLOAD(pathname);
                 if (!sdf_global_extension_dlhandle) {
                     snprintf(pathname, len, "%s/%s", path, libname2);
-                    sdf_global_extension_dlhandle = dlopen(pathname, RTLD_LAZY);
+                    sdf_global_extension_dlhandle = LIBLOAD(pathname);
                 }
             } else if (S_ISREG(sb.st_mode)) {
-                sdf_global_extension_dlhandle = dlopen(path, RTLD_LAZY);
+                sdf_global_extension_dlhandle = LIBLOAD(path);
             }
             if (sdf_global_extension_dlhandle) break;
         }
@@ -124,20 +138,33 @@ void *sdf_extension_load(sdf_file_t *h)
     }
 
     if (!sdf_global_extension_dlhandle) {
-        sdf_global_extension_dlhandle = dlopen(libname1, RTLD_LAZY);
+        sdf_global_extension_dlhandle = LIBLOAD(libname1);
         if (!sdf_global_extension_dlhandle)
-            sdf_global_extension_dlhandle = dlopen(libname2, RTLD_LAZY);
+            sdf_global_extension_dlhandle = LIBLOAD(libname2);
     }
 
     if (!sdf_global_extension_dlhandle) {
         sdf_global_extension_failed = 1;
+#if defined(_WIN32) || defined(__CYGWIN__)
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
+                        FORMAT_MESSAGE_IGNORE_INSERTS,
+                      NULL,                 /* message source */
+                      GetLastError(),       /* error number */
+                      0,                    /* default language */
+                      error_buffer,         /* destination */
+                      sizeof(error_buffer), /* size of destination */
+                      NULL);                /* no inserts */
+        // strndup not available
+        h->error_message = strdup(error_buffer);
+#else
         h->error_message = dlerror();
+#endif
         sdf_global_extension_refcount--;
         return NULL;
     }
 
     // Weird pointer copying required by ISO C
-    p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_create");
+    p = LIBFUNC(sdf_global_extension_dlhandle, "sdf_extension_create");
     memcpy(&sdf_extension_create, &p, sizeof(p));
 
     sdf_global_extension = sdf_extension_create(h);
@@ -145,7 +172,6 @@ void *sdf_extension_load(sdf_file_t *h)
     sdf_global_extension_path = strdup(dlpath(sdf_global_extension_dlhandle));
 
     return sdf_global_extension;
-#endif
 }
 
 
@@ -157,7 +183,6 @@ char *sdf_extension_path(void)
 
 void sdf_extension_unload(void)
 {
-#if !defined(_WIN32) && !defined(__CYGWIN__)
     sdf_extension_destroy_t *sdf_extension_destroy;
     void *p;
 
@@ -167,14 +192,14 @@ void sdf_extension_unload(void)
         sdf_global_extension_refcount--;
         if (sdf_global_extension_refcount > 0) return;
         // Weird pointer copying required by ISO C
-        p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_destroy");
+        p = LIBFUNC(sdf_global_extension_dlhandle, "sdf_extension_destroy");
         memcpy(&sdf_extension_destroy, &p, sizeof(p));
 
         sdf_extension_destroy(sdf_global_extension);
     }
 
 #ifndef VALGRIND
-    dlclose(sdf_global_extension_dlhandle);
+    LIBCLOSE(sdf_global_extension_dlhandle);
     sdf_global_extension_dlhandle = NULL;
 #endif
 
@@ -190,13 +215,11 @@ void sdf_extension_unload(void)
     full_info_string = NULL;
 
     return;
-#endif
 }
 
 
 void sdf_extension_free_data(sdf_file_t *h)
 {
-#if !defined(_WIN32) && !defined(__CYGWIN__)
     sdf_extension_free_t *sdf_extension_free;
     void *p;
 
@@ -204,7 +227,7 @@ void sdf_extension_free_data(sdf_file_t *h)
 
     if (sdf_global_extension) {
         // Weird pointer copying required by ISO C
-        p = dlsym(sdf_global_extension_dlhandle, "sdf_extension_free");
+        p = LIBFUNC(sdf_global_extension_dlhandle, "sdf_extension_free");
         if (!p)
             return;
         memcpy(&sdf_extension_free, &p, sizeof(p));
@@ -213,7 +236,6 @@ void sdf_extension_free_data(sdf_file_t *h)
     }
 
     return;
-#endif
 }
 
 
