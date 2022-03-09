@@ -211,11 +211,11 @@ static int sdf_fopen(sdf_file_t *h, int mode)
         h->filehandle = 0;
 #else
     if (mode == SDF_READ)
-        h->filehandle = fopen(h->filename, "r");
+        h->filehandle = fopen(h->filename, "rb");
     else if (mode == SDF_WRITE)
-        h->filehandle = fopen(h->filename, "w");
+        h->filehandle = fopen(h->filename, "wb");
     else if (mode == (SDF_READ|SDF_WRITE))
-        h->filehandle = fopen(h->filename, "r+");
+        h->filehandle = fopen(h->filename, "rb+");
     else
         h->filehandle = NULL;
 #endif
