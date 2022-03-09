@@ -9,11 +9,10 @@
 #ifdef __APPLE__
 #  define _DARWIN_C_SOURCE
 #  include <mach-o/dyld.h>
-#else // Linux
+#elif !defined(_WIN32) && !defined(__CYGWIN__) // Linux
 #  define _GNU_SOURCE
 #  include <link.h>
 #endif
-#include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -22,7 +21,7 @@
 #include <sdf_derived.h>
 #include <sdf.h>
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__) // Linux
 # include <unistd.h>
 # include <dlfcn.h>
 #endif
@@ -60,7 +59,7 @@ static const char *dlpath(void *handle)
         if (found)
             break;
     }
-#else // Linux
+#elif !defined(_WIN32) && !defined(__CYGWIN__) // Linux
     struct link_map *map;
     dlinfo(handle, RTLD_DI_LINKMAP, &map);
 
@@ -74,7 +73,7 @@ static const char *dlpath(void *handle)
 
 void *sdf_extension_load(sdf_file_t *h)
 {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
     sdf_extension_create_t *sdf_extension_create;
     void *p;
     char *libname1 = "sdf_extension.so";
@@ -158,7 +157,7 @@ char *sdf_extension_path(void)
 
 void sdf_extension_unload(void)
 {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
     sdf_extension_destroy_t *sdf_extension_destroy;
     void *p;
 
@@ -197,7 +196,7 @@ void sdf_extension_unload(void)
 
 void sdf_extension_free_data(sdf_file_t *h)
 {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
     sdf_extension_free_t *sdf_extension_free;
     void *p;
 
