@@ -35,6 +35,13 @@
 #  define LIBCLOSE(lib) dlclose((lib))
 #endif
 
+#if !defined(S_ISREG) && defined(S_IFMT) && defined(S_IFREG)
+  #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
+#if !defined(S_ISDIR) && defined(S_IFMT) && defined(S_IFDIR)
+  #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
+
 static void *sdf_global_extension = NULL;
 static void *sdf_global_extension_dlhandle = NULL;
 static int   sdf_global_extension_failed = 0;
