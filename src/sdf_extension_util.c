@@ -99,12 +99,13 @@ void *sdf_extension_load(sdf_file_t *h)
 #if defined(_WIN32) || defined(__CYGWIN__)
     char *libname1 = "libsdf_extension.dll";
     char *libname2 = "sdf_extension.dll";
+    char *sep = ";,";
 #else
     char *libname1 = "sdf_extension.so";
     char *libname2 = "libsdf_extension.so";
+    char *sep = ":;,";
 #endif
     char *path_env, *pathname, *path;
-    char *sep = ":;,";
     char error_buffer[256];
     int len;
     struct stat sb;
