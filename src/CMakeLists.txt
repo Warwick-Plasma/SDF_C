@@ -26,9 +26,10 @@ target_include_directories(
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+find_package(Git REQUIRED)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/commit_info.h
-   COMMAND sh gen_commit_string.sh ${CMAKE_CURRENT_BINARY_DIR}
-   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    COMMAND ${CMAKE_COMMAND} -DGIT_EXECUTABLE=${GIT_EXECUTABLE} -DOUTDIR=${CMAKE_CURRENT_BINARY_DIR} -P CommitInfo.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(
     TARGETS sdfc
