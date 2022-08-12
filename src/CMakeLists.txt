@@ -13,6 +13,7 @@ set(SOURCES
    )
 
 add_library(sdfc STATIC ${SOURCES} commit_info.h)
+set_target_properties(sdfc PROPERTIES POSITION_INDEPENDENT_CODE True)
 if(PARALLEL)
    set_source_files_properties(
        ${SOURCES}

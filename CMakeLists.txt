@@ -11,7 +11,7 @@ set(TOPLEVEL "${CMAKE_CURRENT_SOURCE_DIR}")
 #file(GLOB SOURCE_ALL include/*inc CMakeLists.txt Makefile*)
 
 if(NOT MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic -g")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 endif()
 if(${CMAKE_C_COMPILER_ID} STREQUAL "GNU")
    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-2")
