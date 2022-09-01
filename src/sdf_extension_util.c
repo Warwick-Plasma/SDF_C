@@ -100,10 +100,12 @@ void *sdf_extension_load(sdf_file_t *h)
     char *libname1 = "libsdf_extension.dll";
     char *libname2 = "sdf_extension.dll";
     char *sep = ";,";
+    char *join = "\\";
 #else
     char *libname1 = "sdf_extension.so";
     char *libname2 = "libsdf_extension.so";
     char *sep = ":;,";
+    char *join = "/";
 #endif
     char *path_env, *pathname, *path;
     char error_buffer[256];
@@ -136,10 +138,10 @@ void *sdf_extension_load(sdf_file_t *h)
         for (path = strtok(path_env, sep); path; path = strtok(NULL, sep)) {
             stat(path, &sb);
             if (S_ISDIR(sb.st_mode)) {
-                snprintf(pathname, len, "%s/%s", path, libname1);
+                snprintf(pathname, len, "%s%s%s", path, join, libname1);
                 sdf_global_extension_dlhandle = LIBLOAD(pathname);
                 if (!sdf_global_extension_dlhandle) {
-                    snprintf(pathname, len, "%s/%s", path, libname2);
+                    snprintf(pathname, len, "%s%s%s", path, join, libname2);
                     sdf_global_extension_dlhandle = LIBLOAD(pathname);
                 }
             } else if (S_ISREG(sb.st_mode)) {
