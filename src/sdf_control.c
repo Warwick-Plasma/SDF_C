@@ -573,7 +573,8 @@ static int sdf_read_jobid(sdf_file_t *h, sdf_jobid_t *jobid)
 static int factor2d(int ncpus, int64_t *dims, int *cpu_split)
 {
     const int ndims = 2;
-    int dmin[ndims], npoint_min[ndims], cpu_split_tmp[ndims], grids[ndims][2];
+    // int dmin[ndims]...; doesn't work with Microsoft Visual C, so:
+    int dmin[2], npoint_min[2], cpu_split_tmp[2], grids[2][2];
     int i, j, ii, jj, n, cpus, maxcpus, grid, split_big, dim;
     float gridav, deviation, mindeviation;
 
@@ -630,7 +631,8 @@ static int factor2d(int ncpus, int64_t *dims, int *cpu_split)
 static int factor3d(int ncpus, int64_t *dims, int *cpu_split)
 {
     const int ndims = 3;
-    int dmin[ndims], npoint_min[ndims], cpu_split_tmp[ndims], grids[ndims][2];
+    // int dmin[ndims]...; doesn't work with Microsoft Visual C, so:
+    int dmin[3], npoint_min[3], cpu_split_tmp[3], grids[3][2];
     int i, j, k, ii, jj, kk, n, cpus, maxcpus, grid, split_big, dim;
     float gridav, deviation, mindeviation;
 
