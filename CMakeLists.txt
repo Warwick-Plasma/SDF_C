@@ -23,5 +23,5 @@ set(SDFC_LIB_DIR "${CMAKE_CURRENT_BINARY_DIR}/src" CACHE PATH
 
 include_directories(include)
 add_subdirectory(src)
-install(DIRECTORY include DESTINATION . COMPONENT develop PATTERN uthash.h EXCLUDE)
-install(FILES src/uthash/include/uthash.h DESTINATION include COMPONENT develop)
+install(DIRECTORY include/ DESTINATION include/SDFC_${SDFC_VERSION} COMPONENT develop PATTERN uthash.h EXCLUDE)
+install(FILES src/uthash/include/uthash.h DESTINATION include/SDFC_${SDFC_VERSION} COMPONENT develop)

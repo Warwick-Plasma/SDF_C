@@ -34,10 +34,11 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/commit_info.h
 
 install(
     TARGETS sdfc
-    EXPORT SDFCConfig
+    EXPORT SDFCTargets
     COMPONENT develop
-    LIBRARY DESTINATION lib
-    INCLUDES DESTINATION include
+    ARCHIVE DESTINATION lib/SDFC_${SDFC_VERSION}
+    LIBRARY DESTINATION lib/SDFC_${SDFC_VERSION}
+    INCLUDES DESTINATION include/SDFC_${SDFC_VERSION}
 )
 
 include(CMakePackageConfigHelpers)
@@ -46,11 +47,22 @@ write_basic_package_version_file(
     VERSION ${SDFC_VERSION}
     COMPATIBILITY SameMajorVersion
 )
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/SDFCConfigVersion.cmake
-    DESTINATION lib/SDFC
-    COMPONENT develop
+
+export(EXPORT SDFCTargets)
+install(EXPORT SDFCTargets DESTINATION lib/SDFC_${SDFC_VERSION} COMPONENT develop)
+
+set(INCLUDE_INSTALL_DIR include/SDFC_${SDFC_VERSION})
+configure_package_config_file(
+    SDFCConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/SDFCConfig.cmake
+    INSTALL_DESTINATION lib/SDFC_${SDFC_VERSION}
+    PATH_VARS INCLUDE_INSTALL_DIR
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
 
-export(TARGETS sdfc FILE ${CMAKE_CURRENT_BINARY_DIR}/SDFCConfig.cmake)
-install(EXPORT SDFCConfig DESTINATION lib/SDFC COMPONENT develop)
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/SDFCConfigVersion.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/SDFCConfig.cmake
+    DESTINATION lib/SDFC_${SDFC_VERSION}
+    COMPONENT develop
+)
