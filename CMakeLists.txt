@@ -8,7 +8,6 @@ if(PARALLEL)
 endif()
 
 set(TOPLEVEL "${CMAKE_CURRENT_SOURCE_DIR}")
-#file(GLOB SOURCE_ALL include/*inc CMakeLists.txt Makefile*)
 
 if(NOT MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
