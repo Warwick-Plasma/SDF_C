@@ -2277,6 +2277,7 @@ int sdf_add_derived_blocks(sdf_file_t *h)
                 sdf_unique_id(h, str);
                 append->id = b->id;
                 b->id = str;
+                mesh = b;
 
                 str = strcat_alloc(b->name, "Orig");
                 sdf_unique_name(h, str);
