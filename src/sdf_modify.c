@@ -135,7 +135,7 @@ static int sdf_read_summary_block_locations(sdf_file_t *h)
 
 static void sdf_modify_rewrite_header(sdf_file_t *h)
 {
-    off_t offset, zero = 0;
+    int64_t offset, zero = 0;
 
     if (h->rank != h->rank_master) return;
 

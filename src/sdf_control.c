@@ -161,7 +161,7 @@ static int sdf_abort(sdf_file_t *h)
 
 
 
-int sdf_seek_set(sdf_file_t *h, off_t offset)
+int sdf_seek_set(sdf_file_t *h, int64_t offset)
 {
 #ifdef PARALLEL
     return MPI_File_seek(h->filehandle, offset, MPI_SEEK_SET);
