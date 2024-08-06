@@ -54,7 +54,7 @@ int sdf_write_bytes(sdf_file_t *h, void *buf, int buflen)
 
 
 
-int sdf_write_at(sdf_file_t *h, off_t offset, void *buf, int buflen)
+int sdf_write_at(sdf_file_t *h, int64_t offset, void *buf, int buflen)
 {
     sdf_seek_set(h, offset);
 #ifdef PARALLEL
@@ -85,7 +85,7 @@ static int sdf_truncate(sdf_file_t *h, int64_t size)
     MPI_Offset length = size;
     return MPI_File_set_size(h->filehandle, length);
 #else
-    off_t length = size;
+    int64_t length = size;
     return FTRUNCATE(fileno(h->filehandle), length);
 #endif
 }
