@@ -2840,6 +2840,7 @@ int sdf_add_derived_blocks_final(sdf_file_t *h)
             // Hide individual rays from the VisIt menu
             for (i = 0 ; i < b->ndims ; i++) {
                 gb = sdf_find_block_by_id(h, b->variable_ids[i]);
+                if (!gb) continue;
                 gb->dont_display = 1;
                 for (n = 0 ; n < gb->ndims ; n++) {
                     sb = sdf_find_block_by_id(h, gb->variable_ids[n]);
