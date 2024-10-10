@@ -440,8 +440,9 @@ int sdf_read_data(sdf_file_t *h)
         return sdf_read_plain_variable(h);
     else if (b->blocktype == SDF_BLOCKTYPE_POINT_VARIABLE)
         return sdf_read_point_variable(h);
-    else if (b->blocktype == SDF_BLOCKTYPE_ARRAY
-            || b->blocktype == SDF_BLOCKTYPE_CPU_SPLIT)
+    else if (b->blocktype == SDF_BLOCKTYPE_ARRAY)
+        return sdf_read_array(h);
+    else if (b->blocktype == SDF_BLOCKTYPE_CPU_SPLIT)
         return sdf_read_plain_mesh(h);
     else if (b->blocktype == SDF_BLOCKTYPE_DATABLOCK)
         return sdf_read_datablock(h);
